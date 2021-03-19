@@ -8,12 +8,12 @@ github.com/Soontao/goHttpDigestClient
 github.com/andybalholm/brotli
 # github.com/andybalholm/cascadia v1.0.0
 github.com/andybalholm/cascadia
-# github.com/apache/thrift v0.13.0
-github.com/apache/thrift/lib/go/thrift
+# github.com/davecgh/go-spew v1.1.1
+github.com/davecgh/go-spew/spew
 # github.com/dlclark/regexp2 v1.4.1-0.20201116162257-a2a8dda75c91
 github.com/dlclark/regexp2
 github.com/dlclark/regexp2/syntax
-# github.com/dop251/goja v0.0.0-20210315194146-7e3a2f190116
+# github.com/dop251/goja v0.0.0-20210317175251-bb14c2267b76
 ## explicit
 github.com/dop251/goja
 github.com/dop251/goja/ast
@@ -43,7 +43,7 @@ github.com/klauspost/compress/zstd
 github.com/klauspost/compress/zstd/internal/xxhash
 # github.com/kubernetes/helm v2.9.0+incompatible
 github.com/kubernetes/helm/pkg/strvals
-# github.com/loadimpact/k6 v0.31.0
+# github.com/loadimpact/k6 v0.31.1
 ## explicit
 github.com/loadimpact/k6/js/common
 github.com/loadimpact/k6/js/internal/modules
@@ -73,6 +73,8 @@ github.com/nu7hatch/gouuid
 github.com/oxtoacart/bpool
 # github.com/pkg/errors v0.8.0
 github.com/pkg/errors
+# github.com/pmezard/go-difflib v1.0.0
+github.com/pmezard/go-difflib/difflib
 # github.com/serenize/snaker v0.0.0-20171204205717-a683aaf2d516
 github.com/serenize/snaker
 # github.com/sirupsen/logrus v1.8.1
@@ -81,20 +83,23 @@ github.com/sirupsen/logrus
 # github.com/spf13/afero v1.1.1
 github.com/spf13/afero
 github.com/spf13/afero/mem
+# github.com/stretchr/testify v1.7.0
+github.com/stretchr/testify/assert
 # github.com/tidwall/gjson v1.6.1
 github.com/tidwall/gjson
 # github.com/tidwall/match v1.0.1
 github.com/tidwall/match
 # github.com/tidwall/pretty v1.0.2
 github.com/tidwall/pretty
-# go.opentelemetry.io/contrib v0.17.0
+# go.opentelemetry.io/contrib v0.18.0
 go.opentelemetry.io/contrib
-# go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace v0.17.0
+# go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace v0.18.0
 ## explicit
 go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace
-# go.opentelemetry.io/otel v0.17.0
+# go.opentelemetry.io/otel v0.18.0
 ## explicit
 go.opentelemetry.io/otel
+go.opentelemetry.io/otel/attribute
 go.opentelemetry.io/otel/baggage
 go.opentelemetry.io/otel/codes
 go.opentelemetry.io/otel/internal
@@ -102,26 +107,26 @@ go.opentelemetry.io/otel/internal/baggage
 go.opentelemetry.io/otel/internal/global
 go.opentelemetry.io/otel/internal/trace/noop
 go.opentelemetry.io/otel/internal/trace/parent
-go.opentelemetry.io/otel/label
 go.opentelemetry.io/otel/propagation
 go.opentelemetry.io/otel/semconv
 go.opentelemetry.io/otel/unit
-# go.opentelemetry.io/otel/exporters/trace/jaeger v0.17.0
+# go.opentelemetry.io/otel/exporters/trace/jaeger v0.18.0
 ## explicit
 go.opentelemetry.io/otel/exporters/trace/jaeger
 go.opentelemetry.io/otel/exporters/trace/jaeger/internal/gen-go/jaeger
-# go.opentelemetry.io/otel/metric v0.17.0
+go.opentelemetry.io/otel/exporters/trace/jaeger/internal/third_party/thrift/lib/go/thrift
+# go.opentelemetry.io/otel/metric v0.18.0
 go.opentelemetry.io/otel/metric
 go.opentelemetry.io/otel/metric/number
 go.opentelemetry.io/otel/metric/registry
-# go.opentelemetry.io/otel/sdk v0.17.0
+# go.opentelemetry.io/otel/sdk v0.18.0
 ## explicit
 go.opentelemetry.io/otel/sdk/export/trace
 go.opentelemetry.io/otel/sdk/instrumentation
 go.opentelemetry.io/otel/sdk/internal
 go.opentelemetry.io/otel/sdk/resource
 go.opentelemetry.io/otel/sdk/trace
-# go.opentelemetry.io/otel/trace v0.17.0
+# go.opentelemetry.io/otel/trace v0.18.0
 ## explicit
 go.opentelemetry.io/otel/trace
 # golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
@@ -155,11 +160,13 @@ golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 # golang.org/x/time v0.0.0-20191024005414-555d28b269f0
 golang.org/x/time/rate
-# google.golang.org/api v0.39.0
+# google.golang.org/api v0.40.0
 google.golang.org/api/support/bundler
-# google.golang.org/grpc v1.35.0
+# google.golang.org/grpc v1.36.0
 ## explicit
 # gopkg.in/guregu/null.v3 v3.3.0
 gopkg.in/guregu/null.v3
 # gopkg.in/yaml.v2 v2.3.0
 gopkg.in/yaml.v2
+# gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
+gopkg.in/yaml.v3
