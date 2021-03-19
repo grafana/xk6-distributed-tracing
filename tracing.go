@@ -1,26 +1,26 @@
 package tracing
 
-
 import (
 	"context"
+	"os"
+
 	"github.com/loadimpact/k6/js/common"
 	"github.com/loadimpact/k6/js/modules"
 	"github.com/loadimpact/k6/lib/consts"
 	"github.com/simskij/xk6-distributed-tracing/client"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	exportjaeger "go.opentelemetry.io/otel/exporters/trace/jaeger"
-	"go.opentelemetry.io/otel/label"
 	"go.opentelemetry.io/otel/propagation"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	"os"
 )
 
 const version = "0.0.1"
 
 func init() {
 	modules.Register(
-		"k6/x/tracing", 
+		"k6/x/tracing",
 		&JsModule{
 			Version: version,
 		})
@@ -30,7 +30,7 @@ func init() {
 // JsModule exposes the tracing client in the javascript runtime
 type JsModule struct {
 	Version string
-	Http *client.TracingClient
+	Http    *client.TracingClient
 }
 
 var initialized bool = false
@@ -45,7 +45,6 @@ func (*JsModule) XHttp(ctx *context.Context) interface{} {
 	return common.Bind(rt, tracingClient, ctx)
 }
 
-
 func SetupJaeger() {
 	jaegerEndpoint, ok := os.LookupEnv("JAEGER_ENDPOINT")
 	if !ok {
@@ -55,9 +54,9 @@ func SetupJaeger() {
 		exportjaeger.WithCollectorEndpoint(jaegerEndpoint),
 		exportjaeger.WithProcess(exportjaeger.Process{
 			ServiceName: "k6",
-			Tags: []label.KeyValue{
-				label.String("exporter", "jaeger"),
-				label.String("k6.version", consts.Version),
+			Tags: []attribute.KeyValue{
+				attribute.String("exporter", "jaeger"),
+				attribute.String("k6.version", consts.Version),
 			},
 		}),
 		exportjaeger.WithSDK(&sdktrace.Config{DefaultSampler: sdktrace.AlwaysSample()}),

@@ -2,14 +2,17 @@ package client
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptrace"
+
 	"github.com/dop251/goja"
 	jsHTTP "github.com/loadimpact/k6/js/modules/k6/http"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
-	"net/http"
-	"net/http/httptrace"
 )
 
 type TracingClient struct {
@@ -25,58 +28,53 @@ func New() *TracingClient {
 }
 
 func (c *TracingClient) Get(ctx context.Context, url goja.Value, args ...goja.Value) (*jsHTTP.Response, error) {
-	return c.WithTrace(c.http.Get, ctx, url, args...)
+	return c.WithTrace(c.http.Get, "HTTP GET", ctx, url, args...)
 }
 
 func (c *TracingClient) Post(ctx context.Context, url goja.Value, args ...goja.Value) (*jsHTTP.Response, error) {
-	return c.WithTrace(c.http.Post, ctx, url, args...)
+	return c.WithTrace(c.http.Post, "HTTP POST", ctx, url, args...)
 }
-
 
 func (c *TracingClient) Put(ctx context.Context, url goja.Value, args ...goja.Value) (*jsHTTP.Response, error) {
-	return c.WithTrace(c.http.Put, ctx, url, args...)
+	return c.WithTrace(c.http.Put, "HTTP PUT", ctx, url, args...)
 }
-
 
 func (c *TracingClient) Del(ctx context.Context, url goja.Value, args ...goja.Value) (*jsHTTP.Response, error) {
-	return c.WithTrace(c.http.Del, ctx, url, args...)
+	return c.WithTrace(c.http.Del, "HTTP DEL", ctx, url, args...)
 }
-
 
 func (c *TracingClient) Head(ctx context.Context, url goja.Value, args ...goja.Value) (*jsHTTP.Response, error) {
-	return c.WithTrace(c.http.Head, ctx, url, args...)
+	return c.WithTrace(c.http.Head, "HTTP HEAD", ctx, url, args...)
 }
-
 
 func (c *TracingClient) Patch(ctx context.Context, url goja.Value, args ...goja.Value) (*jsHTTP.Response, error) {
-	return c.WithTrace(c.http.Patch, ctx, url, args...)
+	return c.WithTrace(c.http.Patch, "HTTP PATCH", ctx, url, args...)
 }
-
 
 func (c *TracingClient) Options(ctx context.Context, url goja.Value, args ...goja.Value) (*jsHTTP.Response, error) {
-	return c.WithTrace(c.http.Options, ctx, url, args...)
+	return c.WithTrace(c.http.Options, "HTTP OPTIONS", ctx, url, args...)
 }
 
-
-func (c *TracingClient) WithTrace(fn HttpFunc, ctx context.Context, url goja.Value, args ...goja.Value) (*jsHTTP.Response, error) {
-	ctx, _, span := startTraceAndSpan(ctx)
+func (c *TracingClient) WithTrace(fn HttpFunc, spanName string, ctx context.Context, url goja.Value, args ...goja.Value) (*jsHTTP.Response, error) {
+	ctx, _, span := startTraceAndSpan(ctx, spanName)
 	defer span.End()
 
 	id := span.SpanContext().TraceID.String()
 	logrus.WithField("trace-id", id).Info("Starting trace")
 
 	ctx, val := getTraceHeadersArg(ctx)
-	
+
 	args = append(args, val)
 	res, err := fn(ctx, url, args...)
-  
+
+	span.SetAttributes(attribute.String("http.method", res.Request.Method), attribute.Int("http.status_code", res.Response.Status), attribute.String("http.url", res.Request.URL))
 	// TODO: extract the textmap from the response
 	return res, err
 }
 
-func startTraceAndSpan(ctx context.Context) (context.Context, trace.Tracer, trace.Span){
-	trace := otel.Tracer("http/makerequest")
-	ctx, span := trace.Start(ctx, "make-request")
+func startTraceAndSpan(ctx context.Context, name string) (context.Context, trace.Tracer, trace.Span) {
+	trace := otel.Tracer("xk6/http")
+	ctx, span := trace.Start(ctx, name)
 	return ctx, trace, span
 }
 
@@ -86,14 +84,15 @@ func getTraceHeadersArg(ctx context.Context) (context.Context, goja.Value) {
 	ctx = httptrace.WithClientTrace(ctx, otelhttptrace.NewClientTrace(ctx))
 
 	h := http.Header{}
-	otel.GetTextMapPropagator().Inject(ctx, h)
 
-	headers := map[string][]string {}
+	otel.GetTextMapPropagator().Inject(ctx, propagation.HeaderCarrier(h))
+
+	headers := map[string][]string{}
 	for key, header := range h {
 		headers[key] = header
 	}
 
-	val := vm.ToValue(map[string]map[string][]string {
+	val := vm.ToValue(map[string]map[string][]string{
 		"headers": headers,
 	})
 
