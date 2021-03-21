@@ -7,9 +7,11 @@ require (
 	github.com/loadimpact/k6 v0.31.1
 	github.com/sirupsen/logrus v1.8.1
 	go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace v0.18.0
-	go.opentelemetry.io/otel v0.18.0
-	go.opentelemetry.io/otel/exporters/trace/jaeger v0.18.0
-	go.opentelemetry.io/otel/sdk v0.18.0
-	go.opentelemetry.io/otel/trace v0.18.0
-	google.golang.org/grpc v1.36.0 // indirect
+	go.opentelemetry.io/otel v0.19.0
+	go.opentelemetry.io/otel/exporters/otlp v0.19.0
+	go.opentelemetry.io/otel/exporters/stdout v0.19.0
+	go.opentelemetry.io/otel/exporters/trace/jaeger v0.19.0
+	go.opentelemetry.io/otel/exporters/trace/zipkin v0.19.0
+	go.opentelemetry.io/otel/sdk v0.19.0
+	go.opentelemetry.io/otel/trace v0.19.0
 )
