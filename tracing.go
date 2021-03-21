@@ -4,10 +4,10 @@ import (
 	"context"
 	"os"
 
+	"github.com/k6io/xk6-distributed-tracing/client"
 	"github.com/loadimpact/k6/js/common"
 	"github.com/loadimpact/k6/js/modules"
 	"github.com/loadimpact/k6/lib/consts"
-	"github.com/simskij/xk6-distributed-tracing/client"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
