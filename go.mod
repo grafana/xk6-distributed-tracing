@@ -1,4 +1,4 @@
-module github.com/simskij/xk6-distributed-tracing
+module github.com/k6io/xk6-distributed-tracing
 
 go 1.15
 
