@@ -59,7 +59,7 @@ func (c *TracingClient) WithTrace(fn HttpFunc, spanName string, ctx context.Cont
 	ctx, _, span := startTraceAndSpan(ctx, spanName)
 	defer span.End()
 
-	id := span.SpanContext().TraceID.String()
+	id := span.SpanContext().TraceID().String()
 	logrus.WithField("trace-id", id).Info("Starting trace")
 
 	ctx, val := getTraceHeadersArg(ctx)
