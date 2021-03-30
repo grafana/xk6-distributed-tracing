@@ -11,7 +11,10 @@ export function setup() {
 }
 
 export default function() {
-  const http = new Http();
+  const http = new Http({
+    exporter: "jaeger",
+    propagator: "w3c",
+  });
   const r = http.get('https://test-api.k6.io');
   
   console.log(JSON.stringify(r.request.headers))
