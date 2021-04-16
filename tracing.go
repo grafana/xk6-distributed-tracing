@@ -9,6 +9,9 @@ import (
 	"github.com/loadimpact/k6/js/modules"
 	"github.com/loadimpact/k6/lib/consts"
 	"github.com/sirupsen/logrus"
+	propb3 "go.opentelemetry.io/contrib/propagators/b3"
+	propjaeger "go.opentelemetry.io/contrib/propagators/jaeger"
+	propot "go.opentelemetry.io/contrib/propagators/ot"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	exportotlp "go.opentelemetry.io/otel/exporters/otlp"
@@ -61,6 +64,12 @@ func (*JsModule) XHttp(ctx *context.Context, opts Options) interface{} {
 		switch opts.Propagator {
 		case "w3c":
 			propagator = propagation.TraceContext{}
+		case "b3":
+			propagator = propb3.B3{}
+		case "jaeger":
+			propagator = propjaeger.Jaeger{}
+		case "ot":
+			propagator = propot.OT{}
 		default:
 			logrus.Error("Unknown tracing propagator")
 		}
