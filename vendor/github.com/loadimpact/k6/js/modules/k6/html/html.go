@@ -30,8 +30,8 @@ import (
 	"github.com/pkg/errors"
 	gohtml "golang.org/x/net/html"
 
-	"github.com/loadimpact/k6/js/common"
-	"github.com/loadimpact/k6/js/internal/modules"
+	"go.k6.io/k6/js/common"
+	"go.k6.io/k6/js/internal/modules"
 )
 
 func init() {

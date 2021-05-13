@@ -6,7 +6,7 @@ import (
 	"net/http/httptrace"
 
 	"github.com/dop251/goja"
-	jsHTTP "github.com/loadimpact/k6/js/modules/k6/http"
+	jsHTTP "go.k6.io/k6/js/modules/k6/http"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace"
 	"go.opentelemetry.io/otel"

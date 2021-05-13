@@ -1,6 +1,6 @@
 # xk6-distributed-tracing
 
-This is a [k6](https://github.com/loadimpact/k6) extension using the [xk6](https://github.com/k6io/xk6) system.
+This is a [k6](https://github.com/k6io/k6) extension using the [xk6](https://github.com/k6io/xk6) system.
 
 | :exclamation: This is a proof of concept, isn't supported by the k6 team, and may break in the future. USE AT YOUR OWN RISK! |
 |------|
@@ -30,13 +30,12 @@ Then:
 
 1. Download `xk6`:
   ```bash
-  $ go get -u github.com/k6io/xk6
+  $ go install github.com/k6io/xk6/cmd/xk6@latest
   ```
 
 2. Build the binary:
   ```bash
-  $ xk6 build v0.31.0 \
-      --with github.com/k6io/xk6-distributed-tracing
+  $ xk6 build --with github.com/k6io/xk6-distributed-tracing
   ```
 
 ## Example

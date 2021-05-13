@@ -51,23 +51,23 @@ github.com/klauspost/compress/zstd
 github.com/klauspost/compress/zstd/internal/xxhash
 # github.com/kubernetes/helm v2.9.0+incompatible
 github.com/kubernetes/helm/pkg/strvals
-# github.com/loadimpact/k6 v0.31.1
+# go.k6.io/k6 v0.31.1
 ## explicit
-github.com/loadimpact/k6/js/common
-github.com/loadimpact/k6/js/internal/modules
-github.com/loadimpact/k6/js/modules
-github.com/loadimpact/k6/js/modules/k6/html
-github.com/loadimpact/k6/js/modules/k6/http
-github.com/loadimpact/k6/lib
-github.com/loadimpact/k6/lib/consts
-github.com/loadimpact/k6/lib/fsext
-github.com/loadimpact/k6/lib/metrics
-github.com/loadimpact/k6/lib/netext
-github.com/loadimpact/k6/lib/netext/httpext
-github.com/loadimpact/k6/lib/types
-github.com/loadimpact/k6/loader
-github.com/loadimpact/k6/stats
-github.com/loadimpact/k6/ui/pb
+go.k6.io/k6/js/common
+go.k6.io/k6/js/internal/modules
+go.k6.io/k6/js/modules
+go.k6.io/k6/js/modules/k6/html
+go.k6.io/k6/js/modules/k6/http
+go.k6.io/k6/lib
+go.k6.io/k6/lib/consts
+go.k6.io/k6/lib/fsext
+go.k6.io/k6/lib/metrics
+go.k6.io/k6/lib/netext
+go.k6.io/k6/lib/netext/httpext
+go.k6.io/k6/lib/types
+go.k6.io/k6/loader
+go.k6.io/k6/stats
+go.k6.io/k6/ui/pb
 # github.com/mailru/easyjson v0.7.4-0.20200812114229-8ab5ff9cd8e4
 github.com/mailru/easyjson/buffer
 github.com/mailru/easyjson/jwriter

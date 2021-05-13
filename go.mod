@@ -3,9 +3,9 @@ module github.com/k6io/xk6-distributed-tracing
 go 1.15
 
 require (
-	github.com/dop251/goja v0.0.0-20210317175251-bb14c2267b76
-	github.com/loadimpact/k6 v0.31.1
+	github.com/dop251/goja v0.0.0-20210427212725-462d53687b0d
 	github.com/sirupsen/logrus v1.8.1
+	go.k6.io/k6 v0.32.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace v0.18.0
 	go.opentelemetry.io/contrib/propagators v0.19.0
 	go.opentelemetry.io/otel v0.19.0

@@ -23,10 +23,10 @@ package http
 import (
 	"context"
 
-	"github.com/loadimpact/k6/js/common"
-	"github.com/loadimpact/k6/js/internal/modules"
-	"github.com/loadimpact/k6/lib"
-	"github.com/loadimpact/k6/lib/netext"
+	"go.k6.io/k6/js/common"
+	"go.k6.io/k6/js/internal/modules"
+	"go.k6.io/k6/lib"
+	"go.k6.io/k6/lib/netext"
 )
 
 func init() {

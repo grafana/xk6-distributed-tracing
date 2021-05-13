@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/loadimpact/k6/js/internal/modules"
+	"go.k6.io/k6/js/internal/modules"
 )
 
 const extPrefix string = "k6/x/"

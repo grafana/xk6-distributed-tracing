@@ -5,9 +5,9 @@ import (
 	"os"
 
 	"github.com/k6io/xk6-distributed-tracing/client"
-	"github.com/loadimpact/k6/js/common"
-	"github.com/loadimpact/k6/js/modules"
-	"github.com/loadimpact/k6/lib/consts"
+	"go.k6.io/k6/js/common"
+	"go.k6.io/k6/js/modules"
+	"go.k6.io/k6/lib/consts"
 	"github.com/sirupsen/logrus"
 	propb3 "go.opentelemetry.io/contrib/propagators/b3"
 	propjaeger "go.opentelemetry.io/contrib/propagators/jaeger"
