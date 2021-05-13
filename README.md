@@ -35,7 +35,7 @@ Then:
 
 2. Build the binary:
   ```bash
-  $ xk6 build --with github.com/k6io/xk6-distributed-tracing
+  $ xk6 build --with github.com/k6io/xk6-distributed-tracing@latest
   ```
 
 ## Example
