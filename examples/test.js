@@ -7,13 +7,13 @@ export let options = {
 };
 
 export function setup() {
-  console.log(`Running xk6-distributed-tracing v${tracing.version}`, tracing)
+  console.log(`Running xk6-distributed-tracing v${tracing.version}`)
 }
 
 export default function() {
   const http = new Http();
   const r = http.get('https://test-api.k6.io');
   
-  console.log(JSON.stringify(r.request.headers))
+  console.log(`trace-id=${r.trace_id}`)
   sleep(1)
 }
