@@ -59,7 +59,7 @@ export default function() {
     propagator: "w3c",
   });
   const r = http.get('https://test-api.k6.io');
-  
+  console.log(`trace_id=${r.trace_id}`)
   sleep(1)
 }
 ```
@@ -82,18 +82,18 @@ $ ./k6 run script.js
   scenarios: (100.00%) 1 scenario, 1 max VUs, 40s max duration (incl. graceful stop):
            * default: 1 looping VUs for 10s (gracefulStop: 30s)
 
-INFO[0000] Running xk6-distributed-tracing v0.0.1 [object Object]  source=console
+INFO[0000] Running xk6-distributed-tracing v0.0.1  source=console
 INFO[0000] Jaeger exporter configured                   
-INFO[0000] Starting trace                                trace-id=743fff0b96778539acb7139e72ea1e33
-INFO[0001] Starting trace                                trace-id=365f4637a52526db1de2d30a5568ca3a
-INFO[0002] Starting trace                                trace-id=c49e1df945049c5c3c8b59acc84d7d3b
-INFO[0003] Starting trace                                trace-id=53e1937d56aa172b46d2310e3380dfe9
-INFO[0004] Starting trace                                trace-id=d61e8757d35c9ca1780b88977ac56d72
-INFO[0005] Starting trace                                trace-id=358e794ed636d268a918dcd2f3f9db0a
-INFO[0006] Starting trace                                trace-id=992a959e09ee84f3905a215bec8b53a0
-INFO[0007] Starting trace                                trace-id=aee11c64de11744ab5b66d5dd8ed361b
-INFO[0008] Starting trace                                trace-id=c4dc45d857e99ede2bb902666457239d
-INFO[0009] Starting trace                                trace-id=7623d10293d9f03c15deb8055935664e
+INFO[0000] trace-id=743fff0b96778539acb7139e72ea1e33
+INFO[0001] trace-id=365f4637a52526db1de2d30a5568ca3a
+INFO[0002] trace-id=c49e1df945049c5c3c8b59acc84d7d3b
+INFO[0003] trace-id=53e1937d56aa172b46d2310e3380dfe9
+INFO[0004] trace-id=d61e8757d35c9ca1780b88977ac56d72
+INFO[0005] trace-id=358e794ed636d268a918dcd2f3f9db0a
+INFO[0006] trace-id=992a959e09ee84f3905a215bec8b53a0
+INFO[0007] trace-id=aee11c64de11744ab5b66d5dd8ed361b
+INFO[0008] trace-id=c4dc45d857e99ede2bb902666457239d
+INFO[0009] trace-id=7623d10293d9f03c15deb8055935664e
 
 running (10.1s), 0/1 VUs, 10 complete and 0 interrupted iterations
 default ✓ [======================================] 1 VUs  10s
