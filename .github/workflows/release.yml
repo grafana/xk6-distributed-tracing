@@ -31,6 +31,6 @@ jobs:
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: k6
-        asset_name: k6-binary
+        asset_name: k6-distributed-tracing
         tag: ${{ github.ref }}
         overwrite: true
