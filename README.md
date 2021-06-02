@@ -1,19 +1,22 @@
 # xk6-distributed-tracing
 
-This is a [k6](https://github.com/k6io/k6) extension using the [xk6](https://github.com/k6io/xk6) system.
-
-> ⚠️ **This is a proof of concept** ⚠️
->  As this is a proof of concept,  it won't be supported by the k6 team.
+> ⚠️ **This is a proof of concept** ⚠️  
+> As this is a proof of concept,  it won't be supported by the k6 team.  
 > It may also break in the future as xk6 evolves.
 
 </div>
 
-## Why?
 
-If you're testing a system that is instrumented (with distributed tracing), you can use this extension to start the traces on k6.
+This extension adds distributed tracing support to [k6](https://github.com/k6io/k6). It is implemented using the [xk6](https://github.com/k6io/xk6) extension system.
+
+If you're testing a system that has distributed tracing instrumentation, you can use this extension to start the traces on [k6](https://github.com/k6io/k6).
+
+<div align="center">
 
 ![Example trace](/media/trace.png)
-*Example: Trace started on k6*
+*Trace started on k6*
+
+</div>
 
 The extension is built on top of [OpenTelemetry](https://opentelemetry.io/), and gives k6:
 - An instrumented HTTP client.
