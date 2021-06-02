@@ -53,6 +53,8 @@ type Options struct {
 }
 
 var initialized bool = false
+var provider *tracesdk.TracerProvider
+var propagator propagation.TextMapPropagator
 
 func (*JsModule) XHttp(ctx *context.Context, opts Options) interface{} {
 	if !initialized {
@@ -65,7 +67,6 @@ func (*JsModule) XHttp(ctx *context.Context, opts Options) interface{} {
 		}
 
 		// Set up propagator
-		var propagator propagation.TextMapPropagator
 		switch opts.Propagator {
 		case "w3c":
 			propagator = propagation.TraceContext{}
@@ -80,7 +81,6 @@ func (*JsModule) XHttp(ctx *context.Context, opts Options) interface{} {
 		}
 
 		// Set up exporter
-		var provider *tracesdk.TracerProvider
 		switch opts.Exporter {
 		case "jaeger":
 			if opts.Endpoint == "" {
@@ -131,6 +131,10 @@ func (*JsModule) XHttp(ctx *context.Context, opts Options) interface{} {
 	rt := common.GetRuntime(*ctx)
 	tracingClient := client.New()
 	return common.Bind(rt, tracingClient, ctx)
+}
+
+func (*JsModule) Shutdown() error {
+	return provider.Shutdown(context.Background())
 }
 
 func initJaegerProvider(url string) (*tracesdk.TracerProvider, error) {

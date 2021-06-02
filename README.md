@@ -50,7 +50,7 @@ export let options = {
 };
 
 export function setup() {
-  console.log(`Running xk6-distributed-tracing v${tracing.version}`, tracing)
+  console.log(`Running xk6-distributed-tracing v${tracing.version}`, tracing);
 }
 
 export default function() {
@@ -60,8 +60,13 @@ export default function() {
     endpoint: "http://localhost:14268/api/traces"
   });
   const r = http.get('https://test-api.k6.io');
-  console.log(`trace_id=${r.trace_id}`)
-  sleep(1)
+  console.log(`trace_id=${r.trace_id}`);
+  sleep(1);
+}
+
+export function teardown(){
+  // Cleanly shutdown and flush telemetry when k6 exits.
+  tracing.shutdown();
 }
 ```
 
