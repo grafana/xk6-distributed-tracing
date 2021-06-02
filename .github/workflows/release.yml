@@ -1,0 +1,33 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.15
+
+    - name: Install xk6
+      run: go install github.com/k6io/xk6/cmd/xk6@latest
+
+    - name: Build the binary
+      run: xk6 build --with github.com/k6io/xk6-distributed-tracing@latest
+      
+    - name: Upload binaries to release
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: k6
+        asset_name: k6-binary
+        tag: ${{ github.ref }}
+        overwrite: true
