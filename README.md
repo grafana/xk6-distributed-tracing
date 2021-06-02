@@ -1,7 +1,7 @@
 # xk6-distributed-tracing
 
 > ⚠️ **This is a proof of concept** ⚠️  
-> As this is a proof of concept,  it won't be supported by the k6 team.  
+> It won't be supported by the k6 team.  
 > It may also break in the future as xk6 evolves.
 
 </div>
