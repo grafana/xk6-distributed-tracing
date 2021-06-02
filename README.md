@@ -2,14 +2,18 @@
 
 This is a [k6](https://github.com/k6io/k6) extension using the [xk6](https://github.com/k6io/xk6) system.
 
-| :exclamation: This is a proof of concept, isn't supported by the k6 team, and may break in the future. USE AT YOUR OWN RISK! |
-|------|
+> ⚠️ **This is a proof of concept** ⚠️
+>  As this is a proof of concept,  it won't be supported by the k6 team.
+> It may also break in the future as xk6 evolves.
 
 </div>
 
 ## Why?
 
 If you're testing a system that is instrumented (with distributed tracing), you can use this extension to start the traces on k6.
+
+![Example trace](/media/trace.png)
+*Example: Trace started on k6*
 
 The extension is built on top of [OpenTelemetry](https://opentelemetry.io/), and gives k6:
 - An instrumented HTTP client.
