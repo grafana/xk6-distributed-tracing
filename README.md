@@ -6,10 +6,9 @@
 
 </div>
 
+This extension adds distributed tracing support to [k6](https://github.com/k6io/k6)! That means, that if you're testing a system that has distributed tracing instrumentation, you can use this extension to start the traces on [k6](https://github.com/k6io/k6). 
 
-This extension adds distributed tracing support to [k6](https://github.com/k6io/k6). It is implemented using the [xk6](https://github.com/k6io/xk6) extension system.
-
-If you're testing a system that has distributed tracing instrumentation, you can use this extension to start the traces on [k6](https://github.com/k6io/k6).
+It is implemented using the [xk6](https://github.com/k6io/xk6) extension system.
 
 <div align="center">
 
@@ -17,6 +16,8 @@ If you're testing a system that has distributed tracing instrumentation, you can
 *Trace started on k6*
 
 </div>
+
+## Features
 
 The extension is built on top of [OpenTelemetry](https://opentelemetry.io/), and gives k6:
 - An instrumented HTTP client.
