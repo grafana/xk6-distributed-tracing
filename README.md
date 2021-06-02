@@ -57,6 +57,7 @@ export default function() {
   const http = new Http({
     exporter: "jaeger",
     propagator: "w3c",
+    endpoint: "http://localhost:14268/api/traces"
   });
   const r = http.get('https://test-api.k6.io');
   console.log(`trace_id=${r.trace_id}`)
@@ -82,8 +83,7 @@ $ ./k6 run script.js
   scenarios: (100.00%) 1 scenario, 1 max VUs, 40s max duration (incl. graceful stop):
            * default: 1 looping VUs for 10s (gracefulStop: 30s)
 
-INFO[0000] Running xk6-distributed-tracing v0.0.1  source=console
-INFO[0000] Jaeger exporter configured                   
+INFO[0000] Running xk6-distributed-tracing v0.0.2  source=console                
 INFO[0000] trace-id=743fff0b96778539acb7139e72ea1e33
 INFO[0001] trace-id=365f4637a52526db1de2d30a5568ca3a
 INFO[0002] trace-id=c49e1df945049c5c3c8b59acc84d7d3b

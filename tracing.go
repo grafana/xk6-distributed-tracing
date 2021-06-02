@@ -2,13 +2,12 @@ package tracing
 
 import (
 	"context"
-	"os"
 
 	"github.com/k6io/xk6-distributed-tracing/client"
+	"github.com/sirupsen/logrus"
 	"go.k6.io/k6/js/common"
 	"go.k6.io/k6/js/modules"
 	"go.k6.io/k6/lib/consts"
-	"github.com/sirupsen/logrus"
 	propb3 "go.opentelemetry.io/contrib/propagators/b3"
 	propjaeger "go.opentelemetry.io/contrib/propagators/jaeger"
 	propot "go.opentelemetry.io/contrib/propagators/ot"
@@ -21,11 +20,16 @@ import (
 	exportzipkin "go.opentelemetry.io/otel/exporters/trace/zipkin"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/semconv"
 )
 
-const version = "0.0.1"
+const version = "0.0.2"
+
+var attr = resource.NewWithAttributes(
+	semconv.ServiceNameKey.String("k6"),
+	attribute.String("k6.version", consts.Version),
+)
 
 func init() {
 	modules.Register(
@@ -45,6 +49,7 @@ type JsModule struct {
 type Options struct {
 	Exporter   string
 	Propagator string
+	Endpoint   string
 }
 
 var initialized bool = false
@@ -75,133 +80,111 @@ func (*JsModule) XHttp(ctx *context.Context, opts Options) interface{} {
 		}
 
 		// Set up exporter
+		var provider *tracesdk.TracerProvider
 		switch opts.Exporter {
 		case "jaeger":
-			initJaegerTracer()
-			otel.SetTextMapPropagator(propagator)
+			if opts.Endpoint == "" {
+				opts.Endpoint = "http://localhost:14268/api/traces"
+			}
+			tp, err := initJaegerProvider(opts.Endpoint)
+			if err != nil {
+				logrus.WithError(err).Error("Failed to init Jaeger exporter")
+			}
+			provider = tp
 		case "zipkin":
-			initZipkinTracer()
-			otel.SetTextMapPropagator(propagator)
-		case "noop":
-			initNoopTracer()
-			otel.SetTextMapPropagator(propagator)
-		case "stdout":
-			initStdoutTracer()
-			otel.SetTextMapPropagator(propagator)
+			if opts.Endpoint == "" {
+				opts.Endpoint = "http://localhost:9411/api/v2/spans"
+			}
+			tp, err := initZipkinProvider(opts.Endpoint)
+			if err != nil {
+				logrus.WithError(err).Error("Failed to init Zipkin exporter")
+			}
+			provider = tp
 		case "otlp":
-			initOtlpTracer()
-			otel.SetTextMapPropagator(propagator)
+			if opts.Endpoint == "" {
+				opts.Endpoint = "0.0.0.0:55680"
+			}
+			tp, err := initOtlpProvider(opts.Endpoint)
+			if err != nil {
+				logrus.WithError(err).Error("Failed to init otlp exporter")
+			}
+			provider = tp
+		case "noop":
+			tp, err := initNoopProvider()
+			if err != nil {
+				logrus.WithError(err).Error("Failed to init Noop exporter")
+			}
+			provider = tp
+		case "stdout":
+			tp, err := initStdoutProvider()
+			if err != nil {
+				logrus.WithError(err).Error("Failed to init stdout exporter")
+			}
+			provider = tp
 		default:
 			logrus.Error("Unknown tracing exporter")
 		}
 		initialized = true
+		otel.SetTracerProvider(provider)
+		otel.SetTextMapPropagator(propagator)
 	}
 	rt := common.GetRuntime(*ctx)
 	tracingClient := client.New()
 	return common.Bind(rt, tracingClient, ctx)
 }
 
-func initJaegerTracer() {
-	jaegerEndpoint, ok := os.LookupEnv("JAEGER_ENDPOINT")
-	if !ok {
-		jaegerEndpoint = "http://localhost:14268/api/traces"
-	}
-	_, err := exportjaeger.InstallNewPipeline(
-		exportjaeger.WithCollectorEndpoint(jaegerEndpoint),
-		exportjaeger.WithSDKOptions(
-			sdktrace.WithSampler(sdktrace.AlwaysSample()),
-			sdktrace.WithResource(resource.NewWithAttributes(
-				semconv.ServiceNameKey.String("k6"),
-				attribute.String("exporter", "zipkin"),
-				attribute.String("k6.version", consts.Version),
-			)),
-		),
-	)
-
+func initJaegerProvider(url string) (*tracesdk.TracerProvider, error) {
+	exp, err := exportjaeger.NewRawExporter(exportjaeger.WithCollectorEndpoint(exportjaeger.WithEndpoint(url)))
 	if err != nil {
-		logrus.WithError(err).Error("Error while starting the Jaeger exporter pipeline")
-	} else {
-		logrus.Info("Jaeger exporter configured")
+		return nil, err
 	}
+	tp := tracesdk.NewTracerProvider(
+		tracesdk.WithBatcher(exp),
+		tracesdk.WithResource(attr),
+	)
+	return tp, nil
 }
 
-func initZipkinTracer() {
-	// Create a Zipkin exporter and install it as a global tracer.
-	zipkinEndpoint, ok := os.LookupEnv("ZIPKIN_ENDPOINT")
-	if !ok {
-		zipkinEndpoint = "http://localhost:9411/api/v2/spans"
-	}
-	err := exportzipkin.InstallNewPipeline(
-		zipkinEndpoint,
-		exportzipkin.WithSDKOptions(
-			sdktrace.WithSampler(sdktrace.AlwaysSample()),
-			sdktrace.WithResource(resource.NewWithAttributes(
-				semconv.ServiceNameKey.String("k6"),
-				attribute.String("exporter", "zipkin"),
-				attribute.String("k6.version", consts.Version),
-			)),
-		),
-	)
+func initZipkinProvider(url string) (*tracesdk.TracerProvider, error) {
+	exp, err := exportzipkin.NewRawExporter(url)
 	if err != nil {
-		logrus.WithError(err).Error("Error while starting the Zipkin exporter pipeline")
+		return nil, err
 	}
+	tp := tracesdk.NewTracerProvider(
+		tracesdk.WithBatcher(exp),
+		tracesdk.WithResource(attr),
+	)
+	return tp, nil
 }
 
-func initNoopTracer() {
-	// Create a noop exporter and install it as a global tracer.
+func initOtlpProvider(url string) (*tracesdk.TracerProvider, error) {
+	ctx := context.Background()
+	exp, err := exportotlp.NewExporter(ctx, exportotlpgrpc.NewDriver(
+		exportotlpgrpc.WithInsecure(),
+		exportotlpgrpc.WithEndpoint(url),
+	))
+	if err != nil {
+		return nil, err
+	}
+	tp := tracesdk.NewTracerProvider(
+		tracesdk.WithBatcher(exp),
+		tracesdk.WithResource(attr),
+	)
+	return tp, nil
+}
+
+func initNoopProvider() (*tracesdk.TracerProvider, error) {
 	exportOpts := []exportout.Option{
 		exportout.WithoutTraceExport(),
 	}
-	_, err := exportout.InstallNewPipeline(exportOpts, nil)
-	if err != nil {
-		logrus.WithError(err).Error("Error while starting the noop exporter pipeline")
-	}
+	tp, _, err := exportout.InstallNewPipeline(exportOpts, nil)
+	return tp, err
 }
 
-func initStdoutTracer() {
-	// Create a stdout exporter and install it as a global tracer.
+func initStdoutProvider() (*tracesdk.TracerProvider, error) {
 	exportOpts := []exportout.Option{
 		exportout.WithPrettyPrint(),
 	}
-	_, err := exportout.InstallNewPipeline(exportOpts, nil)
-	if err != nil {
-		logrus.WithError(err).Error("Error while starting the stdout exporter pipeline")
-	}
-}
-
-func initOtlpTracer() {
-	// Create an otlp exporter and install it as a global tracer.
-	// TODO: Replace this with otlp.InstallNewPipeline() https://github.com/open-telemetry/opentelemetry-go/pull/1373
-	ctx := context.Background()
-
-	otelAgentAddr, ok := os.LookupEnv("OTEL_AGENT_ENDPOINT")
-	if !ok {
-		otelAgentAddr = "0.0.0.0:55680"
-	}
-
-	exp, err := exportotlp.NewExporter(ctx, exportotlpgrpc.NewDriver(
-		exportotlpgrpc.WithInsecure(),
-		exportotlpgrpc.WithEndpoint(otelAgentAddr),
-	))
-	if err != nil {
-		logrus.WithError(err).Error("Failed to create otlp exporter")
-	}
-
-	res, err := resource.New(ctx,
-		resource.WithAttributes(
-			semconv.ServiceNameKey.String("k6"),
-		),
-	)
-	if err != nil {
-		logrus.WithError(err).Error("Failed to create otlp resource")
-	}
-
-	bsp := sdktrace.NewBatchSpanProcessor(exp)
-	tracerProvider := sdktrace.NewTracerProvider(
-		sdktrace.WithSampler(sdktrace.AlwaysSample()),
-		sdktrace.WithResource(res),
-		sdktrace.WithSpanProcessor(bsp),
-	)
-
-	otel.SetTracerProvider(tracerProvider)
+	tp, _, err := exportout.InstallNewPipeline(exportOpts, nil)
+	return tp, err
 }

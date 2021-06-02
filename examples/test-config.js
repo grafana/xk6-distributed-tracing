@@ -14,6 +14,7 @@ export default function() {
   const http = new Http({
     exporter: "jaeger",
     propagator: "w3c",
+    endpoint: "http://localhost:14268/api/traces"
   });
   const r = http.get('https://test-api.k6.io');
   
