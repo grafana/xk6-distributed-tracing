@@ -2,6 +2,7 @@ package tracing
 
 import (
 	"context"
+	"math/rand"
 
 	"github.com/k6io/xk6-distributed-tracing/client"
 	"github.com/sirupsen/logrus"
@@ -50,11 +51,13 @@ type Options struct {
 	Exporter   string
 	Propagator string
 	Endpoint   string
+	CrocoSpans string
 }
 
 var initialized bool = false
 var provider *tracesdk.TracerProvider
 var propagator propagation.TextMapPropagator
+var c context.Context
 
 func (*JsModule) XHttp(ctx *context.Context, opts Options) interface{} {
 	if !initialized {
@@ -127,10 +130,15 @@ func (*JsModule) XHttp(ctx *context.Context, opts Options) interface{} {
 		initialized = true
 		otel.SetTracerProvider(provider)
 		otel.SetTextMapPropagator(propagator)
+		// TODO: Use the id generated for the cloud, in case we are running a cloud output test
+		testRunID := 100000000000 + rand.Intn(999999999999-100000000000)
+		logrus.Info("CrocoSpans test run id: ", testRunID)
+		c = context.WithValue(*ctx, "crocospans", client.Vars{Backend: opts.CrocoSpans, TestRunID: testRunID})
 	}
-	rt := common.GetRuntime(*ctx)
+
+	rt := common.GetRuntime(c)
 	tracingClient := client.New()
-	return common.Bind(rt, tracingClient, ctx)
+	return common.Bind(rt, tracingClient, &c)
 }
 
 func (*JsModule) Shutdown() error {
