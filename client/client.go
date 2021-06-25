@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptrace"
 	"strings"
+	"time"
 
 	"github.com/dop251/goja"
 	"github.com/sirupsen/logrus"
@@ -29,6 +30,7 @@ type HTTPResponse struct {
 }
 
 type RequestMetadata struct {
+	Timestamp      int64   `json:"timestamp"`
 	TestRunID      int     `json:"testRunID"`
 	Group          string  `json:"group"`
 	Scenario       string  `json:"scenario"`
@@ -99,6 +101,7 @@ func (c *TracingClient) WithTrace(fn HttpFunc, spanName string, ctx context.Cont
 		state := lib.GetState(ctx)
 
 		payload, err := json.Marshal(RequestMetadata{
+			Timestamp:      time.Now().UnixNano(),
 			TestRunID:      crocoSpansData.TestRunID,
 			Group:          state.Tags["group"],
 			Scenario:       strings.Fields(state.Tags["scenario"])[0],
