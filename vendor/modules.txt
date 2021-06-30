@@ -23,9 +23,7 @@ github.com/dop251/goja/ftoa/internal/fast
 github.com/dop251/goja/parser
 github.com/dop251/goja/token
 github.com/dop251/goja/unistring
-# github.com/dustin/go-humanize v0.0.0-20171111073723-bb3d318650d4
-github.com/dustin/go-humanize
-# github.com/fatih/color v1.10.0
+# github.com/fatih/color v1.11.0
 github.com/fatih/color
 # github.com/ghodss/yaml v1.0.0
 github.com/ghodss/yaml
@@ -45,6 +43,8 @@ github.com/golang/protobuf/ptypes/empty
 github.com/golang/protobuf/ptypes/struct
 github.com/golang/protobuf/ptypes/timestamp
 github.com/golang/protobuf/ptypes/wrappers
+# github.com/golang/snappy v0.0.3
+github.com/golang/snappy
 # github.com/gorilla/websocket v1.4.2
 github.com/gorilla/websocket
 # github.com/grpc-ecosystem/grpc-gateway v1.16.0
@@ -60,10 +60,9 @@ github.com/jhump/protoreflect/desc/protoparse/ast
 github.com/jhump/protoreflect/dynamic
 github.com/jhump/protoreflect/internal
 github.com/jhump/protoreflect/internal/codec
-# github.com/klauspost/compress v1.11.13
+# github.com/klauspost/compress v1.12.2
 github.com/klauspost/compress/fse
 github.com/klauspost/compress/huff0
-github.com/klauspost/compress/snappy
 github.com/klauspost/compress/zstd
 github.com/klauspost/compress/zstd/internal/xxhash
 # github.com/kubernetes/helm v2.9.0+incompatible
@@ -93,13 +92,13 @@ github.com/spf13/afero
 github.com/spf13/afero/mem
 # github.com/stretchr/testify v1.7.0
 github.com/stretchr/testify/assert
-# github.com/tidwall/gjson v1.7.4
+# github.com/tidwall/gjson v1.8.0
 github.com/tidwall/gjson
 # github.com/tidwall/match v1.0.3
 github.com/tidwall/match
 # github.com/tidwall/pretty v1.1.0
 github.com/tidwall/pretty
-# go.k6.io/k6 v0.32.0
+# go.k6.io/k6 v0.33.0
 ## explicit
 go.k6.io/k6/js/common
 go.k6.io/k6/js/modules
@@ -206,7 +205,7 @@ go.opentelemetry.io/proto/otlp/trace/v1
 golang.org/x/crypto/md4
 golang.org/x/crypto/ocsp
 golang.org/x/crypto/ripemd160
-# golang.org/x/net v0.0.0-20201209123823-ac852fbbde11
+# golang.org/x/net v0.0.0-20210428185458-6f5299370f2b
 golang.org/x/net/html
 golang.org/x/net/html/atom
 golang.org/x/net/http/httpguts
@@ -241,7 +240,7 @@ google.golang.org/genproto/protobuf/api
 google.golang.org/genproto/protobuf/field_mask
 google.golang.org/genproto/protobuf/ptype
 google.golang.org/genproto/protobuf/source_context
-# google.golang.org/grpc v1.37.0
+# google.golang.org/grpc v1.37.1
 google.golang.org/grpc
 google.golang.org/grpc/attributes
 google.golang.org/grpc/backoff

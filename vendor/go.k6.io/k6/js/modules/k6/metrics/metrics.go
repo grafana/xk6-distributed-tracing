@@ -65,7 +65,16 @@ func newMetric(ctxPtr *context.Context, name string, t stats.MetricType, isTime 
 	}
 
 	rt := common.GetRuntime(*ctxPtr)
-	return common.Bind(rt, Metric{stats.New(name, t, valueType)}, ctxPtr), nil
+	bound := common.Bind(rt, Metric{stats.New(name, t, valueType)}, ctxPtr)
+	o := rt.NewObject()
+	err := o.DefineDataProperty("name", rt.ToValue(name), goja.FLAG_FALSE, goja.FLAG_FALSE, goja.FLAG_TRUE)
+	if err != nil {
+		return nil, err
+	}
+	if err = o.Set("add", rt.ToValue(bound["add"])); err != nil {
+		return nil, err
+	}
+	return o, nil
 }
 
 func (m Metric) Add(ctx context.Context, v goja.Value, addTags ...map[string]string) (bool, error) {

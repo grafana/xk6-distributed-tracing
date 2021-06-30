@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptrace"
-	"strings"
 	"time"
 
 	"github.com/dop251/goja"
@@ -21,7 +20,9 @@ import (
 )
 
 type TracingClient struct {
-	http *jsHTTP.HTTP
+	http      *jsHTTP.HTTP
+	Backend   string
+	TestRunID int
 }
 
 type HTTPResponse struct {
@@ -48,9 +49,11 @@ type Vars struct {
 
 type HttpFunc func(ctx context.Context, url goja.Value, args ...goja.Value) (*jsHTTP.Response, error)
 
-func New() *TracingClient {
+func New(backend string, testRunID int) *TracingClient {
 	return &TracingClient{
-		http: &jsHTTP.HTTP{},
+		http:      &jsHTTP.HTTP{},
+		Backend:   backend,
+		TestRunID: testRunID,
 	}
 }
 
@@ -95,16 +98,23 @@ func (c *TracingClient) WithTrace(fn HttpFunc, spanName string, ctx context.Cont
 
 	span.SetAttributes(attribute.String("http.method", res.Request.Method), attribute.Int("http.status_code", res.Response.Status), attribute.String("http.url", res.Request.URL))
 
-	crocoSpansData := ctx.Value("crocospans").(Vars)
-	if crocoSpansData.Backend != "" {
+	if c.Backend != "" {
 		// Extract k6 metadata
-		state := lib.GetState(ctx)
+		var scenario string
+		globalState := lib.GetState(ctx)
+		scenarioState := lib.GetScenarioState(ctx)
+		// In case we do requests on the setuo/teardown steps
+		if scenarioState == nil {
+			scenario = ""
+		} else {
+			scenario = scenarioState.Name
+		}
 
 		payload, err := json.Marshal(RequestMetadata{
 			Timestamp:      time.Now().UnixNano(),
-			TestRunID:      crocoSpansData.TestRunID,
-			Group:          state.Tags["group"],
-			Scenario:       strings.Fields(state.Tags["scenario"])[0],
+			TestRunID:      c.TestRunID,
+			Group:          globalState.Tags["group"],
+			Scenario:       scenario,
 			TraceID:        id,
 			HTTPUrl:        res.Request.URL,
 			HTTPMethod:     res.Request.Method,
@@ -117,7 +127,7 @@ func (c *TracingClient) WithTrace(fn HttpFunc, spanName string, ctx context.Cont
 
 		// TODO: We're making one request per trace... We should send batches.
 		// Or maybe let the user configure which one they prefer
-		_, err = http.Post(crocoSpansData.Backend, "application/json", bytes.NewBuffer(payload))
+		_, err = http.Post(c.Backend, "application/json", bytes.NewBuffer(payload))
 		if err != nil {
 			logrus.WithError(err).Error("Failed to push request metadata")
 		}
