@@ -52,6 +52,7 @@ type Options struct {
 	Propagator string
 	Endpoint   string
 	CrocoSpans string
+	New        bool
 }
 
 var initialized bool = false
@@ -135,7 +136,7 @@ func (*JsModule) XHttp(ctx *context.Context, opts Options) interface{} {
 		logrus.Info("CrocoSpans test run id: ", testRunID)
 	}
 	rt := common.GetRuntime(*ctx)
-	tracingClient := client.New(opts.CrocoSpans, testRunID)
+	tracingClient := client.New(opts.CrocoSpans, testRunID, opts.New)
 	return common.Bind(rt, tracingClient, ctx)
 }
 

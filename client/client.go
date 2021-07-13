@@ -23,6 +23,7 @@ type TracingClient struct {
 	http      *jsHTTP.HTTP
 	Backend   string
 	TestRunID int
+	New       bool
 }
 
 type HTTPResponse struct {
@@ -30,9 +31,26 @@ type HTTPResponse struct {
 	TraceID string
 }
 
-type RequestMetadata struct {
+type RawMetadata struct {
+	TestRunID      int          `json:"testRunID"`
+	TracingBackend string       `json:"tracingBackend"`
+	RawRequests    []RawRequest `json:"rawRequests"`
+}
+
+type RawRequest struct {
 	Timestamp      int64   `json:"timestamp"`
+	Group          string  `json:"group"`
+	Scenario       string  `json:"scenario"`
+	TraceID        string  `json:"traceID"`
+	HTTPStatusCode int     `json:"httpStatusCode"`
+	HTTPUrl        string  `json:"httpURL"`
+	HTTPMethod     string  `json:"httpMethod"`
+	HTTPDuration   float64 `json:"httpDuration"`
+}
+
+type OldRequest struct {
 	TestRunID      int     `json:"testRunID"`
+	Timestamp      int64   `json:"timestamp"`
 	Group          string  `json:"group"`
 	Scenario       string  `json:"scenario"`
 	TraceID        string  `json:"traceID"`
@@ -49,11 +67,12 @@ type Vars struct {
 
 type HttpFunc func(ctx context.Context, url goja.Value, args ...goja.Value) (*jsHTTP.Response, error)
 
-func New(backend string, testRunID int) *TracingClient {
+func New(backend string, testRunID int, new bool) *TracingClient {
 	return &TracingClient{
 		http:      &jsHTTP.HTTP{},
 		Backend:   backend,
 		TestRunID: testRunID,
+		New:       new,
 	}
 }
 
@@ -103,34 +122,65 @@ func (c *TracingClient) WithTrace(fn HttpFunc, spanName string, ctx context.Cont
 		var scenario string
 		globalState := lib.GetState(ctx)
 		scenarioState := lib.GetScenarioState(ctx)
-		// In case we do requests on the setuo/teardown steps
+		// In case we do requests on the setup/teardown steps
 		if scenarioState == nil {
 			scenario = ""
 		} else {
 			scenario = scenarioState.Name
 		}
 
-		payload, err := json.Marshal(RequestMetadata{
-			Timestamp:      time.Now().UnixNano(),
-			TestRunID:      c.TestRunID,
-			Group:          globalState.Tags["group"],
-			Scenario:       scenario,
-			TraceID:        id,
-			HTTPUrl:        res.Request.URL,
-			HTTPMethod:     res.Request.Method,
-			HTTPStatusCode: res.Status,
-			HTTPDuration:   res.Timings.Duration,
-		})
-		if err != nil {
-			logrus.WithError(err).Error("Failed to marshal request metadata")
+		if c.New {
+			// TODO: make real batches
+			payload, err := json.Marshal(RawMetadata{
+				TestRunID:      c.TestRunID,
+				TracingBackend: "http://localhost:3200",
+				RawRequests: []RawRequest{
+					{
+						Timestamp:      time.Now().UnixNano(),
+						Group:          globalState.Tags["group"],
+						Scenario:       scenario,
+						TraceID:        id,
+						HTTPUrl:        res.Request.URL,
+						HTTPMethod:     res.Request.Method,
+						HTTPStatusCode: res.Status,
+						HTTPDuration:   res.Timings.Duration,
+					},
+				},
+			})
+			if err != nil {
+				logrus.WithError(err).Error("Failed to marshal request metadata")
+			}
+
+			// TODO: We're making one request per trace... We should send batches.
+			// Or maybe let the user configure which one they prefer
+			_, err = http.Post(c.Backend, "application/json", bytes.NewBuffer(payload))
+			if err != nil {
+				logrus.WithError(err).Error("Failed to push request metadata")
+			}
+		} else {
+			payload, err := json.Marshal(OldRequest{
+				TestRunID:      c.TestRunID,
+				Timestamp:      time.Now().UnixNano(),
+				Group:          globalState.Tags["group"],
+				Scenario:       scenario,
+				TraceID:        id,
+				HTTPUrl:        res.Request.URL,
+				HTTPMethod:     res.Request.Method,
+				HTTPStatusCode: res.Status,
+				HTTPDuration:   res.Timings.Duration,
+			})
+			if err != nil {
+				logrus.WithError(err).Error("Failed to marshal request metadata")
+			}
+
+			// TODO: We're making one request per trace... We should send batches.
+			// Or maybe let the user configure which one they prefer
+			_, err = http.Post(c.Backend, "application/json", bytes.NewBuffer(payload))
+			if err != nil {
+				logrus.WithError(err).Error("Failed to push request metadata")
+			}
 		}
 
-		// TODO: We're making one request per trace... We should send batches.
-		// Or maybe let the user configure which one they prefer
-		_, err = http.Post(c.Backend, "application/json", bytes.NewBuffer(payload))
-		if err != nil {
-			logrus.WithError(err).Error("Failed to push request metadata")
-		}
 	}
 
 	return &HTTPResponse{Response: res, TraceID: id}, err
