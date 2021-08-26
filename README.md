@@ -8,7 +8,7 @@
 
 This extension adds distributed tracing support to [k6](https://github.com/k6io/k6)! That means, that if you're testing a system that is instrumented, you can use this extension to start the traces on k6. 
 
-It is implemented using the [xk6](https://github.com/k6io/xk6) extension system.
+It is implemented using the [xk6](https://github.com/grafana/xk6) extension system.
 
 <div align="center">
 
@@ -38,7 +38,7 @@ Then:
 
 1. Download `xk6`:
   ```bash
-  $ go install github.com/k6io/xk6/cmd/xk6@latest
+  $ go install go.k6.io/xk6/cmd/xk6@latest
   ```
 
 2. Build the binary:
