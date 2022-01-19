@@ -2,3 +2,4 @@
 examples/k6
 k6
 k6-distributed-tracing
+vendor

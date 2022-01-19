@@ -6,7 +6,8 @@ import (
 	"net/http/httptrace"
 
 	"github.com/dop251/goja"
-	jsHTTP "go.k6.io/k6/js/modules/k6/http"
+	"go.k6.io/k6/js/modules"
+	k6HTTP "go.k6.io/k6/js/modules/k6/http"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -15,52 +16,54 @@ import (
 )
 
 type TracingClient struct {
-	http *jsHTTP.HTTP
+	vu   modules.VU
+	http *k6HTTP.HTTP
 }
 
 type HTTPResponse struct {
-	*jsHTTP.Response
+	*k6HTTP.Response
 	TraceID string
 }
 
-type HttpFunc func(ctx context.Context, url goja.Value, args ...goja.Value) (*jsHTTP.Response, error)
+type HttpFunc func(ctx context.Context, url goja.Value, args ...goja.Value) (*k6HTTP.Response, error)
 
-func New() *TracingClient {
+func New(vu modules.VU) *TracingClient {
 	return &TracingClient{
-		http: &jsHTTP.HTTP{},
+		http: &k6HTTP.HTTP{},
+		vu:   vu,
 	}
 }
 
-func (c *TracingClient) Get(ctx context.Context, url goja.Value, args ...goja.Value) (*HTTPResponse, error) {
-	return c.WithTrace(c.http.Get, "HTTP GET", ctx, url, args...)
+func (c *TracingClient) Get(url goja.Value, args ...goja.Value) (*HTTPResponse, error) {
+	return c.WithTrace(c.http.Get, "HTTP GET", url, args...)
 }
 
-func (c *TracingClient) Post(ctx context.Context, url goja.Value, args ...goja.Value) (*HTTPResponse, error) {
-	return c.WithTrace(c.http.Post, "HTTP POST", ctx, url, args...)
+func (c *TracingClient) Post(url goja.Value, args ...goja.Value) (*HTTPResponse, error) {
+	return c.WithTrace(c.http.Post, "HTTP POST", url, args...)
 }
 
-func (c *TracingClient) Put(ctx context.Context, url goja.Value, args ...goja.Value) (*HTTPResponse, error) {
-	return c.WithTrace(c.http.Put, "HTTP PUT", ctx, url, args...)
+func (c *TracingClient) Put(url goja.Value, args ...goja.Value) (*HTTPResponse, error) {
+	return c.WithTrace(c.http.Put, "HTTP PUT", url, args...)
 }
 
-func (c *TracingClient) Del(ctx context.Context, url goja.Value, args ...goja.Value) (*HTTPResponse, error) {
-	return c.WithTrace(c.http.Del, "HTTP DEL", ctx, url, args...)
+func (c *TracingClient) Del(url goja.Value, args ...goja.Value) (*HTTPResponse, error) {
+	return c.WithTrace(c.http.Del, "HTTP DEL", url, args...)
 }
 
-func (c *TracingClient) Head(ctx context.Context, url goja.Value, args ...goja.Value) (*HTTPResponse, error) {
-	return c.WithTrace(c.http.Head, "HTTP HEAD", ctx, url, args...)
+func (c *TracingClient) Head(url goja.Value, args ...goja.Value) (*HTTPResponse, error) {
+	return c.WithTrace(c.http.Head, "HTTP HEAD", url, args...)
 }
 
-func (c *TracingClient) Patch(ctx context.Context, url goja.Value, args ...goja.Value) (*HTTPResponse, error) {
-	return c.WithTrace(c.http.Patch, "HTTP PATCH", ctx, url, args...)
+func (c *TracingClient) Patch(url goja.Value, args ...goja.Value) (*HTTPResponse, error) {
+	return c.WithTrace(c.http.Patch, "HTTP PATCH", url, args...)
 }
 
-func (c *TracingClient) Options(ctx context.Context, url goja.Value, args ...goja.Value) (*HTTPResponse, error) {
-	return c.WithTrace(c.http.Options, "HTTP OPTIONS", ctx, url, args...)
+func (c *TracingClient) Options(url goja.Value, args ...goja.Value) (*HTTPResponse, error) {
+	return c.WithTrace(c.http.Options, "HTTP OPTIONS", url, args...)
 }
 
-func (c *TracingClient) WithTrace(fn HttpFunc, spanName string, ctx context.Context, url goja.Value, args ...goja.Value) (*HTTPResponse, error) {
-	ctx, _, span := startTraceAndSpan(ctx, spanName)
+func (c *TracingClient) WithTrace(fn HttpFunc, spanName string, url goja.Value, args ...goja.Value) (*HTTPResponse, error) {
+	ctx, _, span := startTraceAndSpan(c.vu.Context(), spanName)
 	defer span.End()
 
 	id := span.SpanContext().TraceID().String()

@@ -3,9 +3,9 @@ package tracing
 import (
 	"context"
 
+	"github.com/dop251/goja"
 	"github.com/k6io/xk6-distributed-tracing/client"
 	"github.com/sirupsen/logrus"
-	"go.k6.io/k6/js/common"
 	"go.k6.io/k6/js/modules"
 	"go.k6.io/k6/lib/consts"
 	propb3 "go.opentelemetry.io/contrib/propagators/b3"
@@ -24,26 +24,56 @@ import (
 	"go.opentelemetry.io/otel/semconv"
 )
 
-const version = "0.0.2"
+const version = "0.1.0"
+
+func init() {
+	modules.Register("k6/x/tracing", New())
+}
 
 var attr = resource.NewWithAttributes(
 	semconv.ServiceNameKey.String("k6"),
 	attribute.String("k6.version", consts.Version),
 )
 
-func init() {
-	modules.Register(
-		"k6/x/tracing",
-		&JsModule{
-			Version: version,
-		})
+type (
+	// RootModule is the global module instance that will create DistributedTracing
+	// instances for each VU.
+	RootModule struct{}
 
+	DistributedTracing struct {
+		// modules.VU provides some useful methods for accessing internal k6
+		// objects like the global context, VU state and goja runtime.
+		vu modules.VU
+	}
+)
+
+// Ensure the interfaces are implemented correctly.
+var (
+	_ modules.Instance = &DistributedTracing{}
+	_ modules.Module   = &RootModule{}
+)
+
+// New returns a pointer to a new RootModule instance.
+func New() *RootModule {
+	return &RootModule{}
 }
 
-// JsModule exposes the tracing client in the javascript runtime
-type JsModule struct {
-	Version string
-	Http    *client.TracingClient
+// NewModuleInstance implements the modules.Module interface and returns
+// a new instance for each VU.
+func (*RootModule) NewModuleInstance(vu modules.VU) modules.Instance {
+	return &DistributedTracing{vu: vu}
+}
+
+// Exports implements the modules.Instance interface and returns the exports
+// of the JS module.
+func (c *DistributedTracing) Exports() modules.Exports {
+	return modules.Exports{
+		Named: map[string]interface{}{
+			"Http":     c.http,
+			"shutdown": c.shutdown,
+			"version":  version,
+		},
+	}
 }
 
 type Options struct {
@@ -52,11 +82,23 @@ type Options struct {
 	Endpoint   string
 }
 
-var initialized bool = false
-var provider *tracesdk.TracerProvider
-var propagator propagation.TextMapPropagator
+var (
+	initialized bool = false
+	provider    *tracesdk.TracerProvider
+	propagator  propagation.TextMapPropagator
+)
 
-func (*JsModule) XHttp(ctx *context.Context, opts Options) interface{} {
+func (t *DistributedTracing) http(call goja.ConstructorCall) *goja.Object {
+	rt := t.vu.Runtime()
+
+	obj := call.Argument(0).ToObject(rt)
+
+	opts := Options{
+		Exporter:   obj.Get("exporter").ToString().String(),
+		Propagator: obj.Get("propagator").ToString().String(),
+		Endpoint:   obj.Get("endpoint").ToString().String(),
+	}
+
 	if !initialized {
 		// Set default values
 		if opts.Exporter == "" {
@@ -128,12 +170,13 @@ func (*JsModule) XHttp(ctx *context.Context, opts Options) interface{} {
 		otel.SetTracerProvider(provider)
 		otel.SetTextMapPropagator(propagator)
 	}
-	rt := common.GetRuntime(*ctx)
-	tracingClient := client.New()
-	return common.Bind(rt, tracingClient, ctx)
+
+	tracingClient := client.New(t.vu)
+
+	return rt.ToValue(tracingClient).ToObject(rt)
 }
 
-func (*JsModule) Shutdown() error {
+func (*DistributedTracing) shutdown() error {
 	return provider.Shutdown(context.Background())
 }
 
