@@ -24,7 +24,7 @@ import (
 	"go.opentelemetry.io/otel/semconv"
 )
 
-const version = "0.1.0"
+const version = "0.1.1"
 
 func init() {
 	modules.Register("k6/x/tracing", New())
