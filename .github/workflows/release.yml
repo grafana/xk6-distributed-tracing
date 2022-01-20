@@ -15,7 +15,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
-        go-version: 1.15
+        go-version: 1.17
 
     - name: Download xk6
       run: wget https://github.com/k6io/xk6/releases/download/v0.4.1/xk6_0.4.1_linux_amd64.tar.gz
