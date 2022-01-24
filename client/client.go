@@ -2,8 +2,10 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptrace"
+	"strings"
 
 	"github.com/dop251/goja"
 	"go.k6.io/k6/js/modules"
@@ -17,7 +19,7 @@ import (
 
 type TracingClient struct {
 	vu   modules.VU
-	http *k6HTTP.HTTP
+	http *k6HTTP.Client
 }
 
 type HTTPResponse struct {
@@ -29,49 +31,52 @@ type HttpFunc func(ctx context.Context, url goja.Value, args ...goja.Value) (*k6
 
 func New(vu modules.VU) *TracingClient {
 	return &TracingClient{
-		http: &k6HTTP.HTTP{},
+		http: &k6HTTP.Client{},
 		vu:   vu,
 	}
 }
 
 func (c *TracingClient) Get(url goja.Value, args ...goja.Value) (*HTTPResponse, error) {
-	return c.WithTrace(c.http.Get, "HTTP GET", url, args...)
+	return c.WithTrace(http.MethodGet, url, args...)
 }
 
 func (c *TracingClient) Post(url goja.Value, args ...goja.Value) (*HTTPResponse, error) {
-	return c.WithTrace(c.http.Post, "HTTP POST", url, args...)
+	return c.WithTrace(http.MethodPost, url, args...)
 }
 
 func (c *TracingClient) Put(url goja.Value, args ...goja.Value) (*HTTPResponse, error) {
-	return c.WithTrace(c.http.Put, "HTTP PUT", url, args...)
+	return c.WithTrace(http.MethodPut, url, args...)
 }
 
 func (c *TracingClient) Del(url goja.Value, args ...goja.Value) (*HTTPResponse, error) {
-	return c.WithTrace(c.http.Del, "HTTP DEL", url, args...)
+	return c.WithTrace(http.MethodDelete, url, args...)
 }
 
 func (c *TracingClient) Head(url goja.Value, args ...goja.Value) (*HTTPResponse, error) {
-	return c.WithTrace(c.http.Head, "HTTP HEAD", url, args...)
+	return c.WithTrace(http.MethodHead, url, args...)
 }
 
 func (c *TracingClient) Patch(url goja.Value, args ...goja.Value) (*HTTPResponse, error) {
-	return c.WithTrace(c.http.Patch, "HTTP PATCH", url, args...)
+	return c.WithTrace(http.MethodPatch, url, args...)
 }
 
 func (c *TracingClient) Options(url goja.Value, args ...goja.Value) (*HTTPResponse, error) {
-	return c.WithTrace(c.http.Options, "HTTP OPTIONS", url, args...)
+	return c.WithTrace(http.MethodOptions, url, args...)
 }
 
-func (c *TracingClient) WithTrace(fn HttpFunc, spanName string, url goja.Value, args ...goja.Value) (*HTTPResponse, error) {
+func (c *TracingClient) WithTrace(method string, url goja.Value, args ...goja.Value) (*HTTPResponse, error) {
+	spanName := fmt.Sprintf("HTTP %s", strings.ToUpper(method))
+
 	ctx, _, span := startTraceAndSpan(c.vu.Context(), spanName)
 	defer span.End()
 
 	id := span.SpanContext().TraceID().String()
 
-	ctx, val := getTraceHeadersArg(ctx)
+	_, val := getTraceHeadersArg(ctx)
 
+	// TODO: fix the case if the params[headers] are presented
 	args = append(args, val)
-	res, err := fn(ctx, url, args...)
+	res, err := c.http.Request(method, url, args...)
 
 	span.SetAttributes(attribute.String("http.method", res.Request.Method), attribute.Int("http.status_code", res.Response.Status), attribute.String("http.url", res.Request.URL))
 	// TODO: extract the textmap from the response
