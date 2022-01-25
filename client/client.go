@@ -17,7 +17,7 @@ import (
 
 type TracingClient struct {
 	vu          modules.VU
-	httpRequest httpRequestFunc
+	httpRequest HttpRequestFunc
 }
 
 type HTTPResponse struct {
@@ -26,24 +26,18 @@ type HTTPResponse struct {
 }
 
 type (
-	httpRequestFunc func(method string, url goja.Value, args ...goja.Value) (*k6HTTP.Response, error)
+	HttpRequestFunc func(method string, url goja.Value, args ...goja.Value) (*k6HTTP.Response, error)
 	HttpFunc        func(ctx context.Context, url goja.Value, args ...goja.Value) (*k6HTTP.Response, error)
 )
 
-func New(vu modules.VU) *TracingClient {
-	r := k6HTTP.New().NewModuleInstance(vu).Exports().Default.(*goja.Object).Get("request")
-	var requestFunc httpRequestFunc
-	err := vu.Runtime().ExportTo(r, &requestFunc)
-	if err != nil {
-		panic(err)
-	}
+func New(vu modules.VU, requestFunc HttpRequestFunc) *TracingClient {
 	return &TracingClient{
 		httpRequest: requestFunc,
 		vu:          vu,
 	}
 }
 
-func requestToHttpFunc(method string, request httpRequestFunc) HttpFunc {
+func requestToHttpFunc(method string, request HttpRequestFunc) HttpFunc {
 	return func(ctx context.Context, url goja.Value, args ...goja.Value) (*k6HTTP.Response, error) {
 		return request(method, url, args...)
 	}
