@@ -7,6 +7,7 @@ import (
 	"github.com/k6io/xk6-distributed-tracing/client"
 	"github.com/sirupsen/logrus"
 	"go.k6.io/k6/js/modules"
+	k6HTTP "go.k6.io/k6/js/modules/k6/http"
 	"go.k6.io/k6/lib/consts"
 	propb3 "go.opentelemetry.io/contrib/propagators/b3"
 	propjaeger "go.opentelemetry.io/contrib/propagators/jaeger"
@@ -43,7 +44,8 @@ type (
 	DistributedTracing struct {
 		// modules.VU provides some useful methods for accessing internal k6
 		// objects like the global context, VU state and goja runtime.
-		vu modules.VU
+		vu          modules.VU
+		httpRequest client.HttpRequestFunc
 	}
 )
 
@@ -61,7 +63,13 @@ func New() *RootModule {
 // NewModuleInstance implements the modules.Module interface and returns
 // a new instance for each VU.
 func (*RootModule) NewModuleInstance(vu modules.VU) modules.Instance {
-	return &DistributedTracing{vu: vu}
+	r := k6HTTP.New().NewModuleInstance(vu).Exports().Default.(*goja.Object).Get("request")
+	var requestFunc client.HttpRequestFunc
+	err := vu.Runtime().ExportTo(r, &requestFunc)
+	if err != nil {
+		panic(err)
+	}
+	return &DistributedTracing{vu: vu, httpRequest: requestFunc}
 }
 
 // Exports implements the modules.Instance interface and returns the exports
@@ -171,7 +179,7 @@ func (t *DistributedTracing) http(call goja.ConstructorCall) *goja.Object {
 		otel.SetTextMapPropagator(propagator)
 	}
 
-	tracingClient := client.New(t.vu)
+	tracingClient := client.New(t.vu, t.httpRequest)
 
 	return rt.ToValue(tracingClient).ToObject(rt)
 }
