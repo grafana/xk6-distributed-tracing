@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/dop251/goja"
-	"github.com/k6io/xk6-distributed-tracing/client"
+	"github.com/grafana/xk6-distributed-tracing/client"
 	"github.com/sirupsen/logrus"
 	"go.k6.io/k6/js/modules"
 	k6HTTP "go.k6.io/k6/js/modules/k6/http"

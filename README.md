@@ -45,7 +45,7 @@ $ go install go.k6.io/xk6/cmd/xk6@latest
 2. Build the binary:
 
 ```bash
-$ xk6 build --with github.com/k6io/xk6-distributed-tracing@latest
+$ xk6 build --with github.com/grafana/xk6-distributed-tracing@latest
 ```
 
 ## Example

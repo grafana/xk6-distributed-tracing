@@ -17,14 +17,11 @@ jobs:
       with:
         go-version: 1.17
 
-    - name: Download xk6
-      run: wget https://github.com/k6io/xk6/releases/download/v0.4.1/xk6_0.4.1_linux_amd64.tar.gz
-
-    - name: Untargz xk6
-      run: tar -zxf xk6_0.4.1_linux_amd64.tar.gz
+    - name: Install xk6
+      run: go install go.k6.io/xk6/cmd/xk6@latest
 
     - name: Build the binary
-      run: ./xk6 build --with github.com/k6io/xk6-distributed-tracing@latest
+      run: ./xk6 build --with github.com/grafana/xk6-distributed-tracing@latest
       
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
