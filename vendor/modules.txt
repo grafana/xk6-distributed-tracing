@@ -8,8 +8,6 @@ github.com/Soontao/goHttpDigestClient
 github.com/andybalholm/brotli
 # github.com/andybalholm/cascadia v1.1.0
 github.com/andybalholm/cascadia
-# github.com/davecgh/go-spew v1.1.1
-github.com/davecgh/go-spew/spew
 # github.com/dlclark/regexp2 v1.4.1-0.20201116162257-a2a8dda75c91
 github.com/dlclark/regexp2
 github.com/dlclark/regexp2/syntax
@@ -31,7 +29,6 @@ github.com/ghodss/yaml
 github.com/go-sourcemap/sourcemap
 github.com/go-sourcemap/sourcemap/internal/base64vlq
 # github.com/golang/protobuf v1.5.0
-github.com/golang/protobuf/descriptor
 github.com/golang/protobuf/jsonpb
 github.com/golang/protobuf/proto
 github.com/golang/protobuf/protoc-gen-go/descriptor
@@ -47,10 +44,6 @@ github.com/golang/protobuf/ptypes/wrappers
 github.com/golang/snappy
 # github.com/gorilla/websocket v1.4.2
 github.com/gorilla/websocket
-# github.com/grpc-ecosystem/grpc-gateway v1.16.0
-github.com/grpc-ecosystem/grpc-gateway/internal
-github.com/grpc-ecosystem/grpc-gateway/runtime
-github.com/grpc-ecosystem/grpc-gateway/utilities
 # github.com/jhump/protoreflect v1.8.2
 github.com/jhump/protoreflect/codec
 github.com/jhump/protoreflect/desc
@@ -76,12 +69,8 @@ github.com/mattn/go-colorable
 github.com/mattn/go-isatty
 # github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
 github.com/nu7hatch/gouuid
-# github.com/openzipkin/zipkin-go v0.2.5
-github.com/openzipkin/zipkin-go/model
 # github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c
 github.com/oxtoacart/bpool
-# github.com/pmezard/go-difflib v1.0.0
-github.com/pmezard/go-difflib/difflib
 # github.com/serenize/snaker v0.0.0-20201027110005-a7ad2135616e
 github.com/serenize/snaker
 # github.com/sirupsen/logrus v1.8.1
@@ -90,8 +79,6 @@ github.com/sirupsen/logrus
 # github.com/spf13/afero v1.1.2
 github.com/spf13/afero
 github.com/spf13/afero/mem
-# github.com/stretchr/testify v1.7.0
-github.com/stretchr/testify/assert
 # github.com/tidwall/gjson v1.8.0
 github.com/tidwall/gjson
 # github.com/tidwall/match v1.0.3
@@ -113,7 +100,6 @@ go.k6.io/k6/js/modules/k6/http
 go.k6.io/k6/js/modules/k6/metrics
 go.k6.io/k6/js/modules/k6/ws
 go.k6.io/k6/lib
-go.k6.io/k6/lib/consts
 go.k6.io/k6/lib/fsext
 go.k6.io/k6/lib/metrics
 go.k6.io/k6/lib/netext
@@ -122,85 +108,6 @@ go.k6.io/k6/lib/types
 go.k6.io/k6/loader
 go.k6.io/k6/stats
 go.k6.io/k6/ui/pb
-# go.opentelemetry.io/contrib v0.20.0
-go.opentelemetry.io/contrib
-# go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace v0.20.0
-## explicit
-go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace
-# go.opentelemetry.io/contrib/propagators v0.20.0
-## explicit
-go.opentelemetry.io/contrib/propagators/b3
-go.opentelemetry.io/contrib/propagators/jaeger
-go.opentelemetry.io/contrib/propagators/ot
-# go.opentelemetry.io/otel v0.20.0
-## explicit
-go.opentelemetry.io/otel
-go.opentelemetry.io/otel/attribute
-go.opentelemetry.io/otel/baggage
-go.opentelemetry.io/otel/codes
-go.opentelemetry.io/otel/internal
-go.opentelemetry.io/otel/internal/baggage
-go.opentelemetry.io/otel/internal/global
-go.opentelemetry.io/otel/internal/metric
-go.opentelemetry.io/otel/internal/trace/noop
-go.opentelemetry.io/otel/propagation
-go.opentelemetry.io/otel/semconv
-go.opentelemetry.io/otel/unit
-# go.opentelemetry.io/otel/exporters/otlp v0.20.0
-## explicit
-go.opentelemetry.io/otel/exporters/otlp
-go.opentelemetry.io/otel/exporters/otlp/internal/otlpconfig
-go.opentelemetry.io/otel/exporters/otlp/internal/transform
-go.opentelemetry.io/otel/exporters/otlp/otlpgrpc
-# go.opentelemetry.io/otel/exporters/stdout v0.20.0
-## explicit
-go.opentelemetry.io/otel/exporters/stdout
-# go.opentelemetry.io/otel/exporters/trace/jaeger v0.20.0
-## explicit
-go.opentelemetry.io/otel/exporters/trace/jaeger
-go.opentelemetry.io/otel/exporters/trace/jaeger/internal/gen-go/agent
-go.opentelemetry.io/otel/exporters/trace/jaeger/internal/gen-go/jaeger
-go.opentelemetry.io/otel/exporters/trace/jaeger/internal/gen-go/zipkincore
-go.opentelemetry.io/otel/exporters/trace/jaeger/internal/third_party/thrift/lib/go/thrift
-# go.opentelemetry.io/otel/exporters/trace/zipkin v0.20.0
-## explicit
-go.opentelemetry.io/otel/exporters/trace/zipkin
-# go.opentelemetry.io/otel/metric v0.20.0
-go.opentelemetry.io/otel/metric
-go.opentelemetry.io/otel/metric/global
-go.opentelemetry.io/otel/metric/number
-go.opentelemetry.io/otel/metric/registry
-# go.opentelemetry.io/otel/sdk v0.20.0
-## explicit
-go.opentelemetry.io/otel/sdk/instrumentation
-go.opentelemetry.io/otel/sdk/internal
-go.opentelemetry.io/otel/sdk/resource
-go.opentelemetry.io/otel/sdk/trace
-# go.opentelemetry.io/otel/sdk/export/metric v0.20.0
-go.opentelemetry.io/otel/sdk/export/metric
-go.opentelemetry.io/otel/sdk/export/metric/aggregation
-# go.opentelemetry.io/otel/sdk/metric v0.20.0
-go.opentelemetry.io/otel/sdk/metric
-go.opentelemetry.io/otel/sdk/metric/aggregator
-go.opentelemetry.io/otel/sdk/metric/aggregator/exact
-go.opentelemetry.io/otel/sdk/metric/aggregator/histogram
-go.opentelemetry.io/otel/sdk/metric/aggregator/lastvalue
-go.opentelemetry.io/otel/sdk/metric/aggregator/minmaxsumcount
-go.opentelemetry.io/otel/sdk/metric/aggregator/sum
-go.opentelemetry.io/otel/sdk/metric/controller/basic
-go.opentelemetry.io/otel/sdk/metric/controller/time
-go.opentelemetry.io/otel/sdk/metric/processor/basic
-go.opentelemetry.io/otel/sdk/metric/selector/simple
-# go.opentelemetry.io/otel/trace v0.20.0
-## explicit
-go.opentelemetry.io/otel/trace
-# go.opentelemetry.io/proto/otlp v0.7.0
-go.opentelemetry.io/proto/otlp/collector/metrics/v1
-go.opentelemetry.io/proto/otlp/collector/trace/v1
-go.opentelemetry.io/proto/otlp/common/v1
-go.opentelemetry.io/proto/otlp/metrics/v1
-go.opentelemetry.io/proto/otlp/resource/v1
-go.opentelemetry.io/proto/otlp/trace/v1
 # golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897
 golang.org/x/crypto/md4
 golang.org/x/crypto/ocsp
@@ -234,7 +141,6 @@ golang.org/x/text/unicode/norm
 # golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba
 golang.org/x/time/rate
 # google.golang.org/genproto v0.0.0-20200903010400-9bfcb5116336
-google.golang.org/genproto/googleapis/api/httpbody
 google.golang.org/genproto/googleapis/rpc/status
 google.golang.org/genproto/protobuf/api
 google.golang.org/genproto/protobuf/field_mask
@@ -253,7 +159,6 @@ google.golang.org/grpc/codes
 google.golang.org/grpc/connectivity
 google.golang.org/grpc/credentials
 google.golang.org/grpc/encoding
-google.golang.org/grpc/encoding/gzip
 google.golang.org/grpc/encoding/proto
 google.golang.org/grpc/grpclog
 google.golang.org/grpc/internal
@@ -333,5 +238,3 @@ google.golang.org/protobuf/types/pluginpb
 gopkg.in/guregu/null.v3
 # gopkg.in/yaml.v2 v2.4.0
 gopkg.in/yaml.v2
-# gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
-gopkg.in/yaml.v3
