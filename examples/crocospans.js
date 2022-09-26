@@ -7,7 +7,7 @@ export let options = {
 };
 
 export default function () {
-  const http = new Http({"croco_spans": "http://localhost:8081/inges"});
+  const http = new Http({"endpoint": "http://localhost:8081/inges"});
 
   group('do something inside a group', function () {
     let r = http.get('http://localhost:5000/foo');
