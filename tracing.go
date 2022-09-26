@@ -35,8 +35,8 @@ var testRunID int
 func (*JsModule) XHttp(ctx *context.Context, opts Options) interface{} {
 	if !initialized {
 		initialized = true
-		testRunID = 100000000000 + rand.Intn(999999999999-100000000000)
-		logrus.Info("CrocoSpans test run id: ", testRunID)
+		testRunID = 10000 + rand.Intn(99999-10000)
+		logrus.Info("Crocospans testRunID: ", testRunID)
 	}
 	rt := common.GetRuntime(*ctx)
 	tracingClient := New(opts.Endpoint, testRunID)
