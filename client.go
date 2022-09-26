@@ -3,7 +3,6 @@ package tracing
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"net/http"
 	"time"
 	"unsafe"
@@ -12,6 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 	jsHTTP "go.k6.io/k6/js/modules/k6/http"
 	"go.k6.io/k6/lib"
+	"google.golang.org/protobuf/proto"
 )
 
 type TracingClient struct {
@@ -73,7 +73,7 @@ func (c *TracingClient) WithTrace(fn HttpFunc, spanName string, ctx context.Cont
 
 	vm := goja.New()
 
-	h, _ := GenerateHeaderBasedOnPropagator(PropagatorW3C, "123")
+	h, _ := GenerateHeaderBasedOnPropagator(PropagatorJaeger, traceID)
 
 	headers := map[string][]string{}
 	for key, header := range h {
@@ -111,22 +111,25 @@ func (c *TracingClient) WithTrace(fn HttpFunc, spanName string, ctx context.Cont
 			HTTPStatus:        int64(res.Status),
 		}}
 
-		payload, err := json.Marshal(RequestBatch{
+		md := &RequestBatch{
 			SizeBytes: int64(unsafe.Sizeof(r)),
 			Count:     int64(len(r)),
 			Requests:  r,
-		})
+		}
+
+		mm, err := proto.Marshal(md)
 		if err != nil {
 			logrus.WithError(err).Error("Failed to marshal request metadata")
 		}
 
-		rq, _ := http.NewRequest("POST", c.Backend, bytes.NewBuffer(payload))
+		rq, _ := http.NewRequest("POST", c.Backend, bytes.NewBuffer(mm))
 		rq.Header.Add("X-Scope-OrgID", "123")
 		_, err = c.httpClient.Do(rq)
 		if err != nil {
 			logrus.WithError(err).Error("Failed to send request metadata")
 		}
 
+		logrus.Info("Sent request metadata for test run ", c.TestRunID)
 	}
 
 	return &HTTPResponse{Response: res, TraceID: traceID}, err
