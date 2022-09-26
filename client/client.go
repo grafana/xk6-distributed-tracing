@@ -1,23 +1,28 @@
 package client
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"net/http"
-	"net/http/httptrace"
+	"time"
+	"unsafe"
 
 	"github.com/dop251/goja"
+	"github.com/sirupsen/logrus"
 	"go.k6.io/k6/js/modules"
 	k6HTTP "go.k6.io/k6/js/modules/k6/http"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/trace"
+	"go.k6.io/k6/lib"
 )
 
 type TracingClient struct {
 	vu          modules.VU
 	httpRequest HttpRequestFunc
+
+	endpoint  string
+	testRunID int64
+
+	httpClient *http.Client
 }
 
 type HTTPResponse struct {
@@ -30,10 +35,13 @@ type (
 	HttpFunc        func(ctx context.Context, url goja.Value, args ...goja.Value) (*k6HTTP.Response, error)
 )
 
-func New(vu modules.VU, requestFunc HttpRequestFunc) *TracingClient {
+func New(vu modules.VU, requestFunc HttpRequestFunc, endpoint string, testRunID int64) *TracingClient {
 	return &TracingClient{
 		httpRequest: requestFunc,
 		vu:          vu,
+		endpoint:    endpoint,
+		testRunID:   testRunID,
+		httpClient:  &http.Client{},
 	}
 }
 
@@ -73,43 +81,65 @@ func (c *TracingClient) Options(url goja.Value, args ...goja.Value) (*HTTPRespon
 }
 
 func (c *TracingClient) WithTrace(fn HttpFunc, spanName string, url goja.Value, args ...goja.Value) (*HTTPResponse, error) {
-	ctx, _, span := startTraceAndSpan(c.vu.Context(), spanName)
-	defer span.End()
+	ctx := c.vu.Context()
 
-	id := span.SpanContext().TraceID().String()
+	traceID, _, _ := EncodeTraceID(TraceID{
+		Prefix:            K6Prefix,
+		Code:              K6Code_Cloud,
+		UnixTimestampNano: uint64(time.Now().UnixNano()) / uint64(time.Millisecond)})
 
-	ctx, val := getTraceHeadersArg(ctx)
-
-	args = append(args, val)
-	res, err := fn(ctx, url, args...)
-	span.SetAttributes(attribute.String("http.method", res.Request.Method), attribute.Int("http.status_code", res.Response.Status), attribute.String("http.url", res.Request.URL))
-	// TODO: extract the textmap from the response
-	return &HTTPResponse{Response: res, TraceID: id}, err
-}
-
-func startTraceAndSpan(ctx context.Context, name string) (context.Context, trace.Tracer, trace.Span) {
-	trace := otel.Tracer("xk6/http")
-	ctx, span := trace.Start(ctx, name)
-	return ctx, trace, span
-}
-
-func getTraceHeadersArg(ctx context.Context) (context.Context, goja.Value) {
-	vm := goja.New()
-
-	ctx = httptrace.WithClientTrace(ctx, otelhttptrace.NewClientTrace(ctx))
-
-	h := http.Header{}
-
-	otel.GetTextMapPropagator().Inject(ctx, propagation.HeaderCarrier(h))
+	h, _ := GenerateHeaderBasedOnPropagator(PropagatorW3C, "123")
 
 	headers := map[string][]string{}
 	for key, header := range h {
 		headers[key] = header
 	}
 
+	vm := goja.New()
 	val := vm.ToValue(map[string]map[string][]string{
 		"headers": headers,
 	})
 
-	return ctx, val
+	args = append(args, val)
+	res, e := fn(ctx, url, args...)
+
+	var scenario string
+	scenarioState := lib.GetScenarioState(ctx)
+
+	// In case we do requests on the setup/teardown steps
+	if scenarioState == nil {
+		scenario = ""
+	} else {
+		scenario = scenarioState.Name
+	}
+
+	r := []*Request{{
+		TestRunID:         c.testRunID,
+		StartTimeUnixNano: uint64(time.Now().UnixNano()) - uint64(res.Timings.Duration*1000000),
+		EndTimeUnixNano:   uint64(time.Now().UnixNano()),
+		Group:             "group",
+		Scenario:          scenario,
+		TraceID:           traceID,
+		HTTPUrl:           "hola",
+		HTTPMethod:        "adios",
+		HTTPStatus:        int64(123),
+	}}
+
+	payload, err := json.Marshal(RequestBatch{
+		SizeBytes: int64(unsafe.Sizeof(r)),
+		Count:     int64(len(r)),
+		Requests:  r,
+	})
+	if err != nil {
+		logrus.WithError(err).Error("Failed to marshal request metadata")
+	}
+
+	rq, _ := http.NewRequest("POST", c.endpoint, bytes.NewBuffer(payload))
+	rq.Header.Add("X-Scope-OrgID", "123")
+	_, err = c.httpClient.Do(rq)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to send request metadata")
+	}
+
+	return &HTTPResponse{Response: res, TraceID: traceID}, e
 }
