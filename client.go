@@ -128,8 +128,6 @@ func (c *TracingClient) WithTrace(fn HttpFunc, spanName string, ctx context.Cont
 		if err != nil {
 			logrus.WithError(err).Error("Failed to send request metadata")
 		}
-
-		logrus.Info("Sent request metadata for test run ", c.TestRunID)
 	}
 
 	return &HTTPResponse{Response: res, TraceID: traceID}, err
