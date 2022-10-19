@@ -1,16 +1,16 @@
 package tracing
 
 import (
-	"math/rand"
+	"fmt"
 
 	"github.com/dop251/goja"
 	"github.com/grafana/xk6-distributed-tracing/client"
-	"github.com/sirupsen/logrus"
+	"go.k6.io/k6/js/common"
 	"go.k6.io/k6/js/modules"
 	k6HTTP "go.k6.io/k6/js/modules/k6/http"
 )
 
-const version = "0.1.1"
+const version = "0.2.0"
 
 func init() {
 	modules.Register("k6/x/tracing", New())
@@ -63,32 +63,35 @@ func (c *DistributedTracing) Exports() modules.Exports {
 	}
 }
 
-type Options struct {
-	Endpoint   string
-	Propagator string
-}
+func (t *DistributedTracing) parseClientOptions(val goja.Value) (client.Options, error) {
+	rt := t.vu.Runtime()
+	opts := client.Options{
+		Propagator: client.PropagatorW3C,
+	}
 
-var (
-	initialized bool = false
-	testRunID   int64
-)
+	if val == nil || goja.IsUndefined(val) || goja.IsNull(val) {
+		return opts, nil
+	}
+
+	params := val.ToObject(rt)
+	for _, k := range params.Keys() {
+		switch k {
+		case "propagator":
+			opts.Propagator = params.Get(k).ToString().String()
+			//TODO: validate
+		default:
+			return opts, fmt.Errorf("unknown HTTP tracing option '%s'", k)
+		}
+	}
+	return opts, nil
+}
 
 func (t *DistributedTracing) http(call goja.ConstructorCall) *goja.Object {
 	rt := t.vu.Runtime()
-
-	obj := call.Argument(0).ToObject(rt)
-
-	opts := Options{
-		Endpoint: obj.Get("endpoint").ToString().String(),
+	opts, err := t.parseClientOptions(call.Argument(0))
+	if err != nil {
+		common.Throw(rt, err)
 	}
 
-	if !initialized {
-		initialized = true
-		testRunID = int64(100000000000 + rand.Intn(999999999999-100000000000))
-		logrus.Info("Crocospans testRunId: ", testRunID)
-	}
-
-	tracingClient := client.New(t.vu, t.httpRequest, opts.Endpoint, testRunID)
-
-	return rt.ToValue(tracingClient).ToObject(rt)
+	return rt.ToValue(client.New(t.vu, t.httpRequest, opts)).ToObject(rt)
 }

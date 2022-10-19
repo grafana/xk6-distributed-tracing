@@ -1,33 +1,31 @@
 package client
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
-	"unsafe"
 
 	"github.com/dop251/goja"
-	"github.com/sirupsen/logrus"
 	"go.k6.io/k6/js/modules"
 	k6HTTP "go.k6.io/k6/js/modules/k6/http"
-	"go.k6.io/k6/lib"
+	"go.k6.io/k6/metrics"
 )
+
+type Options struct {
+	Propagator string
+}
 
 type TracingClient struct {
 	vu          modules.VU
 	httpRequest HttpRequestFunc
 
-	endpoint  string
-	testRunID int64
-
-	httpClient *http.Client
+	options Options
 }
 
 type HTTPResponse struct {
-	*k6HTTP.Response
-	TraceID string
+	*k6HTTP.Response `js:"-"`
+	TraceID          string
 }
 
 type (
@@ -35,13 +33,11 @@ type (
 	HttpFunc        func(ctx context.Context, url goja.Value, args ...goja.Value) (*k6HTTP.Response, error)
 )
 
-func New(vu modules.VU, requestFunc HttpRequestFunc, endpoint string, testRunID int64) *TracingClient {
+func New(vu modules.VU, requestFunc HttpRequestFunc, options Options) *TracingClient {
 	return &TracingClient{
 		httpRequest: requestFunc,
 		vu:          vu,
-		endpoint:    endpoint,
-		testRunID:   testRunID,
-		httpClient:  &http.Client{},
+		options:     options,
 	}
 }
 
@@ -80,66 +76,115 @@ func (c *TracingClient) Options(url goja.Value, args ...goja.Value) (*HTTPRespon
 	return c.WithTrace(requestToHttpFunc(http.MethodOptions, c.httpRequest), "HTTP OPTIONS", url, args...)
 }
 
-func (c *TracingClient) WithTrace(fn HttpFunc, spanName string, url goja.Value, args ...goja.Value) (*HTTPResponse, error) {
-	ctx := c.vu.Context()
+func isNilly(val goja.Value) bool {
+	return val == nil || goja.IsNull(val) || goja.IsUndefined(val)
+}
 
-	traceID, _, _ := EncodeTraceID(TraceID{
+func (c *TracingClient) WithTrace(fn HttpFunc, spanName string, url goja.Value, args ...goja.Value) (*HTTPResponse, error) {
+	state := c.vu.State()
+	if state == nil {
+		return nil, fmt.Errorf("HTTP requests can only be made in the VU context")
+	}
+
+	traceID, _, err := EncodeTraceID(TraceID{
 		Prefix:            K6Prefix,
 		Code:              K6Code_Cloud,
-		UnixTimestampNano: uint64(time.Now().UnixNano()) / uint64(time.Millisecond)})
-
-	h, _ := GenerateHeaderBasedOnPropagator(PropagatorW3C, "123")
-
-	headers := map[string][]string{}
-	for key, header := range h {
-		headers[key] = header
+		UnixTimestampNano: uint64(time.Now().UnixNano()) / uint64(time.Millisecond),
+	})
+	if err != nil {
+		return nil, err
 	}
 
-	vm := goja.New()
-	val := vm.ToValue(map[string]map[string][]string{
-		"headers": headers,
-	})
+	tracingHeaders, err := GenerateHeaderBasedOnPropagator(c.options.Propagator, traceID)
+	if err != nil {
+		return nil, err
+	}
 
-	args = append(args, val)
-	res, e := fn(ctx, url, args...)
-
-	var scenario string
-	scenarioState := lib.GetScenarioState(ctx)
-
-	// In case we do requests on the setup/teardown steps
-	if scenarioState == nil {
-		scenario = ""
+	// This makes sure that the tracing header will always be added correctly to
+	// the HTTP request headers, whether they were explicitly specified by the
+	// user in the script or not.
+	//
+	// First we make sure to either get the existing request params, or create
+	// them from scratch if they were not specified:
+	rt := c.vu.Runtime()
+	var params *goja.Object
+	if len(args) < 2 {
+		params = rt.NewObject()
+		if len(args) == 0 {
+			args = []goja.Value{goja.Null(), params}
+		} else {
+			args = append(args, params)
+		}
 	} else {
-		scenario = scenarioState.Name
+		jsParams := args[1]
+		if isNilly(jsParams) {
+			params = rt.NewObject()
+			args[1] = params
+		} else {
+			params = jsParams.ToObject(rt)
+		}
+	}
+	// Then we either augment the existing params.headers or create them:
+	var headers *goja.Object
+	if jsHeaders := params.Get("headers"); isNilly(jsHeaders) {
+		headers = rt.NewObject()
+		params.Set("headers", headers)
+	} else {
+		headers = jsHeaders.ToObject(rt)
+	}
+	for key, val := range tracingHeaders {
+		headers.Set(key, val)
 	}
 
-	r := []*Request{{
-		TestRunID:         c.testRunID,
-		StartTimeUnixNano: uint64(time.Now().UnixNano()) - uint64(res.Timings.Duration*1000000),
-		EndTimeUnixNano:   uint64(time.Now().UnixNano()),
-		Group:             "group",
-		Scenario:          scenario,
-		TraceID:           traceID,
-		HTTPUrl:           "hola",
-		HTTPMethod:        "adios",
-		HTTPStatus:        int64(123),
-	}}
-
-	payload, err := json.Marshal(RequestBatch{
-		SizeBytes: int64(unsafe.Sizeof(r)),
-		Count:     int64(len(r)),
-		Requests:  r,
+	// TODO: set span_id as well as some other metadata?
+	state.Tags.Modify(func(tagsAndMeta *metrics.TagsAndMeta) {
+		tagsAndMeta.SetMetadata("trace_id", traceID)
 	})
-	if err != nil {
-		logrus.WithError(err).Error("Failed to marshal request metadata")
-	}
+	defer state.Tags.Modify(func(tagsAndMeta *metrics.TagsAndMeta) {
+		tagsAndMeta.DeleteMetadata("trace_id")
+	})
 
-	rq, _ := http.NewRequest("POST", c.endpoint, bytes.NewBuffer(payload))
-	rq.Header.Add("X-Scope-OrgID", "123")
-	_, err = c.httpClient.Do(rq)
-	if err != nil {
-		logrus.WithError(err).Error("Failed to send request metadata")
-	}
+	// This calls the actual request() function from k6/http with our augmented arguments
+	res, e := fn(c.vu.Context(), url, args...)
+	/*
+		var scenario string
+		scenarioState := lib.GetScenarioState(ctx)
+
+		// In case we do requests on the setup/teardown steps
+		if scenarioState == nil {
+			scenario = ""
+		} else {
+			scenario = scenarioState.Name
+		}
+
+		r := []*Request{{
+			TestRunID:         c.testRunID,
+			StartTimeUnixNano: uint64(time.Now().UnixNano()) - uint64(res.Timings.Duration*1000000),
+			EndTimeUnixNano:   uint64(time.Now().UnixNano()),
+			Group:             "group",
+			Scenario:          scenario,
+			TraceID:           traceID,
+			HTTPUrl:           "hola",
+			HTTPMethod:        "adios",
+			HTTPStatus:        int64(123),
+		}}
+
+		payload, err := json.Marshal(RequestBatch{
+			SizeBytes: int64(unsafe.Sizeof(r)),
+			Count:     int64(len(r)),
+			Requests:  r,
+		})
+		if err != nil {
+			logrus.WithError(err).Error("Failed to marshal request metadata")
+		}
+
+		rq, _ := http.NewRequest("POST", c.endpoint, bytes.NewBuffer(payload))
+		rq.Header.Add("X-Scope-OrgID", "123")
+		_, err = c.httpClient.Do(rq)
+		if err != nil {
+			logrus.WithError(err).Error("Failed to send request metadata")
+		}
+	*/
 
 	return &HTTPResponse{Response: res, TraceID: traceID}, e
 }
