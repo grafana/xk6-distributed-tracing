@@ -19,6 +19,8 @@ type TracingClient struct {
 	httpClient *http.Client
 	Backend    string
 	TestRunID  int
+	OrgID      string
+	APIKey     string
 }
 
 type HTTPResponse struct {
@@ -28,12 +30,14 @@ type HTTPResponse struct {
 
 type HttpFunc func(ctx context.Context, url goja.Value, args ...goja.Value) (*jsHTTP.Response, error)
 
-func New(backend string, testRunID int) *TracingClient {
+func New(backend string, testRunID int, orgID string, apiKey string) *TracingClient {
 	return &TracingClient{
 		http:       &jsHTTP.HTTP{},
 		httpClient: &http.Client{},
 		Backend:    backend,
 		TestRunID:  testRunID,
+		OrgID:      orgID,
+		APIKey:     apiKey,
 	}
 }
 
@@ -123,10 +127,13 @@ func (c *TracingClient) WithTrace(fn HttpFunc, spanName string, ctx context.Cont
 		}
 
 		rq, _ := http.NewRequest("POST", c.Backend, bytes.NewBuffer(mm))
-		rq.Header.Add("X-Scope-OrgID", "123")
-		_, err = c.httpClient.Do(rq)
+		rq.SetBasicAuth(c.OrgID, c.APIKey)
+		ra, err := c.httpClient.Do(rq)
 		if err != nil {
 			logrus.WithError(err).Error("Failed to send request metadata")
+		}
+		if ra.StatusCode != 200 {
+			logrus.WithError(err).Error("Failed to send request metadata", ra.StatusCode)
 		}
 	}
 

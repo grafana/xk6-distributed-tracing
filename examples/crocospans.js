@@ -28,16 +28,16 @@ export const options = {
   }
 };
 
-const tracingConfig = {"endpoint": "http://localhost:10001/api/v1/push/request"}
+const tracingConfig = { "endpoint": "<endpoint>", "org": "<organization>", "token": "<token>" }
 
 const userIDs = ["123", "392", "731", "567"]
 
 export function dispatch() {
   const http = new Http(tracingConfig);
-  group('dispatch customer 123', function () {
-    let r = http.get(`http://localhost:8080/dispatch?customer=${userIDs[0]}`);
+  group('dispatch customer', function () {
+    let r = http.get(`https://hotrod.staging.k6.io/dispatch?customer=${userIDs[0]}`);
     check(r, {
-      'status is 200': (r) => r.status === 200,
+      'status is 200': (r) => r.status === 201,
     });
     console.log(`trace_id=${r.trace_id} status=${r.status} method=${r.request.method} duration=${r.timings.duration}`)
   });
