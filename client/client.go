@@ -146,45 +146,6 @@ func (c *TracingClient) WithTrace(fn HttpFunc, spanName string, url goja.Value, 
 
 	// This calls the actual request() function from k6/http with our augmented arguments
 	res, e := fn(c.vu.Context(), url, args...)
-	/*
-		var scenario string
-		scenarioState := lib.GetScenarioState(ctx)
-
-		// In case we do requests on the setup/teardown steps
-		if scenarioState == nil {
-			scenario = ""
-		} else {
-			scenario = scenarioState.Name
-		}
-
-		r := []*Request{{
-			TestRunID:         c.testRunID,
-			StartTimeUnixNano: uint64(time.Now().UnixNano()) - uint64(res.Timings.Duration*1000000),
-			EndTimeUnixNano:   uint64(time.Now().UnixNano()),
-			Group:             "group",
-			Scenario:          scenario,
-			TraceID:           traceID,
-			HTTPUrl:           "hola",
-			HTTPMethod:        "adios",
-			HTTPStatus:        int64(123),
-		}}
-
-		payload, err := json.Marshal(RequestBatch{
-			SizeBytes: int64(unsafe.Sizeof(r)),
-			Count:     int64(len(r)),
-			Requests:  r,
-		})
-		if err != nil {
-			logrus.WithError(err).Error("Failed to marshal request metadata")
-		}
-
-		rq, _ := http.NewRequest("POST", c.endpoint, bytes.NewBuffer(payload))
-		rq.Header.Add("X-Scope-OrgID", "123")
-		_, err = c.httpClient.Do(rq)
-		if err != nil {
-			logrus.WithError(err).Error("Failed to send request metadata")
-		}
-	*/
 
 	return &HTTPResponse{Response: res, TraceID: traceID}, e
 }

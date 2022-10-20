@@ -198,8 +198,8 @@ github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5t
 go.k6.io/k6 v0.37.1-0.20220426072701-d105f5474bc3/go.mod h1:1bTdDsXTT2V3in3ZgdR15MDW6SQQh5nWni59tirqNB8=
 go.k6.io/k6 v0.38.2/go.mod h1:1bTdDsXTT2V3in3ZgdR15MDW6SQQh5nWni59tirqNB8=
 go.k6.io/k6 v0.40.1-0.20221017105932-3c97ec7d1231/go.mod h1:vaSQ1A2rnC+wrKRJ4ExZCT6kKLfAEYoaIY9UR0uAjjk=
-go.k6.io/k6 v0.40.1-0.20221019080643-28216f803d29 h1:jV+CnW2JeLSMa8A/m2SCcLq1IYvU4iFm4DHooPzloZk=
-go.k6.io/k6 v0.40.1-0.20221019080643-28216f803d29/go.mod h1:ZrgrR06UZbzZt9u+so/yQhlkJFH5gkJ3qCp1hwq1mEU=
+go.k6.io/k6 v0.40.1-0.20221020144551-8a74171c8b43 h1:8xcANo2wvMDjiavFhQkdOOWS1qkAqOTsvEYWuT0PEtI=
+go.k6.io/k6 v0.40.1-0.20221020144551-8a74171c8b43/go.mod h1:ZrgrR06UZbzZt9u+so/yQhlkJFH5gkJ3qCp1hwq1mEU=
 go.opentelemetry.io/proto/otlp v0.7.0/go.mod h1:PqfVotwruBrMGOCsRd/89rSnXhoiJIqeYNgFYFoEGnI=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=

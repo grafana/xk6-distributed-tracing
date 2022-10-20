@@ -5,15 +5,21 @@ import (
 
 	"github.com/dop251/goja"
 	"github.com/grafana/xk6-distributed-tracing/client"
+	"github.com/grafana/xk6-distributed-tracing/crocospans"
 	"go.k6.io/k6/js/common"
 	"go.k6.io/k6/js/modules"
 	k6HTTP "go.k6.io/k6/js/modules/k6/http"
+	"go.k6.io/k6/output"
 )
 
 const version = "0.2.0"
 
 func init() {
 	modules.Register("k6/x/tracing", New())
+
+	output.RegisterExtension("xk6-crocospans", func(p output.Params) (output.Output, error) {
+		return crocospans.New(p)
+	})
 }
 
 type (

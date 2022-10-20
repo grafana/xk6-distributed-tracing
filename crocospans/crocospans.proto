@@ -1,7 +1,7 @@
 syntax = "proto3";
-package client;
+package crocospans;
 
-option go_package = "./;client";
+option go_package = "./;crocospans";
 
 message RequestBatch {
   int64 SizeBytes = 2;
