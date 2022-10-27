@@ -2,6 +2,7 @@ package crocospans
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"go.k6.io/k6/output"
@@ -11,6 +12,8 @@ import (
 type Config struct {
 	Endpoint     string
 	PushInterval time.Duration
+	OrgID        int64
+	Token        string
 
 	// TODO: add other config fields?
 }
@@ -27,6 +30,9 @@ func NewConfig(params output.Params) (Config, error) {
 	} else if val, ok := params.Environment["XK6_CROCOSPANS_ENDPOINT"]; ok {
 		cfg.Endpoint = val
 	}
+	if cfg.Endpoint == "" {
+		return cfg, fmt.Errorf("missing crocospans endpoint, use '--out xk6-crocospans=http://endpoint' or the XK6_CROCOSPANS_ENDPOINT env var")
+	}
 
 	if val, ok := params.Environment["XK6_CROCOSPANS_PUSH_INTERVAL"]; ok {
 		var err error
@@ -36,10 +42,25 @@ func NewConfig(params output.Params) (Config, error) {
 		}
 	}
 
-	if cfg.Endpoint == "" {
-		return cfg, fmt.Errorf("missing crocospans endpoint, use '--out xk6-crocospans=http://endpoint' or the XK6_CROCOSPANS_ENDPOINT env var")
+	if val, ok := params.Environment["XK6_CROCOSPANS_ORG_ID"]; ok {
+		var err error
+		cfg.OrgID, err = strconv.ParseInt(val, 10, 64)
+		if err != nil {
+			return cfg, fmt.Errorf("error parsing environment variable 'XK6_CROCOSPANS_ORG_ID': %w", err)
+		}
+	} else {
+		return cfg, fmt.Errorf("XK6_CROCOSPANS_ORG_ID is required")
 	}
-	// TODO: add more validation and options, e.g. get K6_CLOUD_TOKEN, test run id, org id, etc?
+
+	if val, ok := params.Environment["XK6_CROCOSPANS_TOKEN"]; ok {
+		cfg.Token = val
+	} else if val, ok := params.Environment["K6_CLOUD_TOKEN"]; ok {
+		cfg.Token = val
+	} else {
+		return cfg, fmt.Errorf("XK6_CROCOSPANS_TOKEN or K6_CLOUD_TOKEN is required")
+	}
+
+	// TODO: add more validation and options
 
 	return cfg, nil
 }

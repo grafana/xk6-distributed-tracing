@@ -2,6 +2,7 @@ package crocospans
 
 import (
 	"bytes"
+	"fmt"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -21,7 +22,6 @@ type Output struct {
 	config Config
 
 	testRunID int64
-	orgID     int64
 
 	httpClient *http.Client
 
@@ -49,7 +49,7 @@ func New(p output.Params) (*Output, error) {
 }
 
 func (o *Output) Description() string {
-	return "xk6-crocospans: " + o.config.Endpoint
+	return fmt.Sprintf("xk6-crocospans (TestRunID: %d)", o.testRunID)
 }
 
 // AddMetricSamples adds the given metric samples to the internal buffer.
@@ -81,10 +81,8 @@ func (o *Output) Stop() error {
 func (o *Output) Start() error {
 	o.logger.Debug("Starting...")
 
-	// TODO: initial set up we need to do? get the test run ID and org id somehow?
+	// TODO: initial set up we need to do? get the test run ID somehow?
 	o.testRunID = 10000 + rand.Int63n(99999-10000)
-	o.orgID = 123
-	o.logger.Infof("TestRunID: %d, OrgID: %d", o.testRunID, o.orgID)
 
 	pf, err := output.NewPeriodicFlusher(o.config.PushInterval, o.flushMetrics)
 	if err != nil {
@@ -156,7 +154,9 @@ func (o *Output) flushMetrics() {
 	}
 
 	rq, _ := http.NewRequest("POST", o.config.Endpoint, bytes.NewBuffer(mm))
-	rq.Header.Add("X-Scope-OrgID", strconv.Itoa(int(o.orgID)))
+	orgID := strconv.Itoa(int(o.config.OrgID))
+	rq.Header.Add("X-Scope-OrgID", orgID)
+	rq.SetBasicAuth(orgID, o.config.Token)
 	_, err = o.httpClient.Do(rq)
 	if err != nil {
 		logrus.WithError(err).Error("Failed to send request metadata")
