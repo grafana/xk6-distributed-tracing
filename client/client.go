@@ -2,27 +2,30 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"net/http"
-	"net/http/httptrace"
+	"time"
 
 	"github.com/dop251/goja"
 	"go.k6.io/k6/js/modules"
 	k6HTTP "go.k6.io/k6/js/modules/k6/http"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/trace"
+	"go.k6.io/k6/metrics"
 )
+
+type Options struct {
+	Propagator string
+}
 
 type TracingClient struct {
 	vu          modules.VU
 	httpRequest HttpRequestFunc
+
+	options Options
 }
 
 type HTTPResponse struct {
-	*k6HTTP.Response
-	TraceID string
+	*k6HTTP.Response `js:"-"`
+	TraceID          string
 }
 
 type (
@@ -30,10 +33,11 @@ type (
 	HttpFunc        func(ctx context.Context, url goja.Value, args ...goja.Value) (*k6HTTP.Response, error)
 )
 
-func New(vu modules.VU, requestFunc HttpRequestFunc) *TracingClient {
+func New(vu modules.VU, requestFunc HttpRequestFunc, options Options) *TracingClient {
 	return &TracingClient{
 		httpRequest: requestFunc,
 		vu:          vu,
+		options:     options,
 	}
 }
 
@@ -72,44 +76,76 @@ func (c *TracingClient) Options(url goja.Value, args ...goja.Value) (*HTTPRespon
 	return c.WithTrace(requestToHttpFunc(http.MethodOptions, c.httpRequest), "HTTP OPTIONS", url, args...)
 }
 
+func isNilly(val goja.Value) bool {
+	return val == nil || goja.IsNull(val) || goja.IsUndefined(val)
+}
+
 func (c *TracingClient) WithTrace(fn HttpFunc, spanName string, url goja.Value, args ...goja.Value) (*HTTPResponse, error) {
-	ctx, _, span := startTraceAndSpan(c.vu.Context(), spanName)
-	defer span.End()
-
-	id := span.SpanContext().TraceID().String()
-
-	ctx, val := getTraceHeadersArg(ctx)
-
-	args = append(args, val)
-	res, err := fn(ctx, url, args...)
-	span.SetAttributes(attribute.String("http.method", res.Request.Method), attribute.Int("http.status_code", res.Response.Status), attribute.String("http.url", res.Request.URL))
-	// TODO: extract the textmap from the response
-	return &HTTPResponse{Response: res, TraceID: id}, err
-}
-
-func startTraceAndSpan(ctx context.Context, name string) (context.Context, trace.Tracer, trace.Span) {
-	trace := otel.Tracer("xk6/http")
-	ctx, span := trace.Start(ctx, name)
-	return ctx, trace, span
-}
-
-func getTraceHeadersArg(ctx context.Context) (context.Context, goja.Value) {
-	vm := goja.New()
-
-	ctx = httptrace.WithClientTrace(ctx, otelhttptrace.NewClientTrace(ctx))
-
-	h := http.Header{}
-
-	otel.GetTextMapPropagator().Inject(ctx, propagation.HeaderCarrier(h))
-
-	headers := map[string][]string{}
-	for key, header := range h {
-		headers[key] = header
+	state := c.vu.State()
+	if state == nil {
+		return nil, fmt.Errorf("HTTP requests can only be made in the VU context")
 	}
 
-	val := vm.ToValue(map[string]map[string][]string{
-		"headers": headers,
+	traceID, _, err := EncodeTraceID(TraceID{
+		Prefix:            K6Prefix,
+		Code:              K6Code_Cloud,
+		UnixTimestampNano: uint64(time.Now().UnixNano()) / uint64(time.Millisecond),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	tracingHeaders, err := GenerateHeaderBasedOnPropagator(c.options.Propagator, traceID)
+	if err != nil {
+		return nil, err
+	}
+
+	// This makes sure that the tracing header will always be added correctly to
+	// the HTTP request headers, whether they were explicitly specified by the
+	// user in the script or not.
+	//
+	// First we make sure to either get the existing request params, or create
+	// them from scratch if they were not specified:
+	rt := c.vu.Runtime()
+	var params *goja.Object
+	if len(args) < 2 {
+		params = rt.NewObject()
+		if len(args) == 0 {
+			args = []goja.Value{goja.Null(), params}
+		} else {
+			args = append(args, params)
+		}
+	} else {
+		jsParams := args[1]
+		if isNilly(jsParams) {
+			params = rt.NewObject()
+			args[1] = params
+		} else {
+			params = jsParams.ToObject(rt)
+		}
+	}
+	// Then we either augment the existing params.headers or create them:
+	var headers *goja.Object
+	if jsHeaders := params.Get("headers"); isNilly(jsHeaders) {
+		headers = rt.NewObject()
+		params.Set("headers", headers)
+	} else {
+		headers = jsHeaders.ToObject(rt)
+	}
+	for key, val := range tracingHeaders {
+		headers.Set(key, val)
+	}
+
+	// TODO: set span_id as well as some other metadata?
+	state.Tags.Modify(func(tagsAndMeta *metrics.TagsAndMeta) {
+		tagsAndMeta.SetMetadata("trace_id", traceID)
+	})
+	defer state.Tags.Modify(func(tagsAndMeta *metrics.TagsAndMeta) {
+		tagsAndMeta.DeleteMetadata("trace_id")
 	})
 
-	return ctx, val
+	// This calls the actual request() function from k6/http with our augmented arguments
+	res, e := fn(c.vu.Context(), url, args...)
+
+	return &HTTPResponse{Response: res, TraceID: traceID}, e
 }

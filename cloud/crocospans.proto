@@ -1,0 +1,32 @@
+syntax = "proto3";
+package crocospans;
+
+option go_package = "./;crocospans";
+
+message RequestBatch {
+  int64 SizeBytes = 2;
+
+  int64 Count = 3;
+
+  repeated Request Requests = 4;
+}
+
+message Request {
+  fixed64 StartTimeUnixNano = 1;
+
+  fixed64 EndTimeUnixNano = 2;
+
+  string TraceID = 3;
+
+  int64 TestRunID = 4;
+
+  string Scenario = 5;
+
+  string Group = 6;
+
+  string HTTPUrl = 7;
+
+  string HTTPMethod = 8;
+
+  int64 HTTPStatus = 9;
+}
