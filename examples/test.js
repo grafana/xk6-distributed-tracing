@@ -17,8 +17,3 @@ export default function() {
   console.log(`trace-id=${r.trace_id}`);
   sleep(1);
 }
-
-export function teardown(){
-  // Cleanly shutdown and flush telemetry when k6 exits.
-  tracing.shutdown();
-}

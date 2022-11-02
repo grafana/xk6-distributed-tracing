@@ -11,18 +11,9 @@ export function setup() {
 }
 
 export default function() {
-  const http = new Http({
-    exporter: "jaeger",
-    propagator: "w3c",
-    endpoint: "http://localhost:14268/api/traces"
-  });
+  const http = new Http({propagator: "w3c"});
   const r = http.get('https://test-api.k6.io');
   
   console.log(`trace-id=${r.trace_id}`);
   sleep(1);
-}
-
-export function teardown(){
-  // Cleanly shutdown and flush telemetry when k6 exits.
-  tracing.shutdown();
 }
