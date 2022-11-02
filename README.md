@@ -2,7 +2,9 @@
 
 This extension adds distributed tracing support to [k6](https://github.com/grafana/k6)! 
 
-That means that if you're testing an instrumented system, you can use this extension to start the traces on k6. Currently, it supports HTTP requests and the following propagation formats: `w3c`, `b3`, and `jaeger`.
+That means that if you're testing an instrumented system, you can use this extension to start the traces on k6. 
+
+Currently, it supports HTTP requests and the following propagation formats: `w3c`, `b3`, and `jaeger`.
 
 It is implemented using the [xk6](https://github.com/grafana/xk6) extension system.
 
