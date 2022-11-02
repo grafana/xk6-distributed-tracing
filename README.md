@@ -1,30 +1,10 @@
 # xk6-distributed-tracing
 
-> ⚠️ **This is a proof of concept** ⚠️
-> It won't be supported by the k6 team.
-> It may also break in the future as xk6 evolves.
+This extension adds distributed tracing support to [k6](https://github.com/grafana/k6)! 
 
-</div>
-
-This extension adds distributed tracing support to [k6](https://github.com/grafana/k6)! That means, that if you're testing a system that is instrumented, you can use this extension to start the traces on k6.
+That means that if you're testing an instrumented system, you can use this extension to start the traces on k6. Currently, it supports HTTP requests and the following propagation formats: `w3c`, `b3`, and `jaeger`.
 
 It is implemented using the [xk6](https://github.com/grafana/xk6) extension system.
-
-<div align="center">
-
-![Example trace](/media/trace.png)
-*Trace started on k6*
-
-</div>
-
-## Features
-
-The extension is built on top of [OpenTelemetry](https://opentelemetry.io/), and gives k6:
-- An instrumented HTTP client.
-- The hability to:
-    - Propagate context.
-        - Supported protocols: `w3c`, `b3`, `jaeger`, `ot`
-    - Export spans (your tracing data) to crocospans
 
 ## Build
 
