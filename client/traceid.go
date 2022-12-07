@@ -19,7 +19,7 @@ const (
 )
 
 func GenerateHeaderBasedOnPropagator(propagator string, traceID string) (http.Header, error) {
-	hex8 := RandHexStringRunes(8)
+	hex8 := RandHexStringRunes(16)
 
 	switch propagator {
 	case PropagatorW3C:
