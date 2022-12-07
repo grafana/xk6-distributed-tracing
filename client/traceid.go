@@ -25,7 +25,7 @@ func GenerateHeaderBasedOnPropagator(propagator string, traceID string) (http.He
 	case PropagatorW3C:
 		// Docs: https://www.w3.org/TR/trace-context/#version-format
 		return http.Header{
-			"Traceparent": {fmt.Sprintf("00-%s-%s-01", traceID, hex8)},
+			"traceparent": {fmt.Sprintf("00-%s-%s-01", traceID, hex8)},
 		}, nil
 	case PropagatorB3:
 		// Docs: https://github.com/openzipkin/b3-propagation#single-header
