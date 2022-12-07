@@ -11,7 +11,7 @@ import (
 
 const (
 	PropagatorW3C    = "w3c"
-	HeaderNameW3C    = "Traceparent"
+	HeaderNameW3C    = "traceparent"
 	PropagatorB3     = "b3"
 	HeaderNameB3     = "b3"
 	PropagatorJaeger = "jaeger"
