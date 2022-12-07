@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/dop251/goja"
-	"github.com/javiersoto15/xk6-distributed-tracing/client"
-	crocospans "github.com/javiersoto15/xk6-distributed-tracing/cloud"
+	"github.com/grafana/xk6-distributed-tracing/client"
+	crocospans "github.com/grafana/xk6-distributed-tracing/cloud"
 	"go.k6.io/k6/js/common"
 	"go.k6.io/k6/js/modules"
 	k6HTTP "go.k6.io/k6/js/modules/k6/http"
