@@ -21,13 +21,11 @@ const (
 func GenerateHeaderBasedOnPropagator(propagator string, traceID string) (http.Header, error) {
 	hex8 := RandHexStringRunes(8)
 
-	hex16 := RandHexStringRunes(16)
-
 	switch propagator {
 	case PropagatorW3C:
 		// Docs: https://www.w3.org/TR/trace-context/#version-format
 		return http.Header{
-			"Traceparent": {fmt.Sprintf("00-%s-%s-01", traceID, hex16)},
+			"Traceparent": {fmt.Sprintf("00-%s-%s-01", traceID, RandHexStringRunes(16))},
 		}, nil
 	case PropagatorB3:
 		// Docs: https://github.com/openzipkin/b3-propagation#single-header
