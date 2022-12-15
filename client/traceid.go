@@ -19,23 +19,22 @@ const (
 )
 
 func GenerateHeaderBasedOnPropagator(propagator string, traceID string) (http.Header, error) {
-	hex8 := RandHexStringRunes(8)
 
 	switch propagator {
 	case PropagatorW3C:
 		// Docs: https://www.w3.org/TR/trace-context/#version-format
 		return http.Header{
-			"Traceparent": {fmt.Sprintf("00-%s-%s-01", traceID, hex8)},
+			"Traceparent": {fmt.Sprintf("00-%s-%s-01", traceID, RandHexStringRunes(16))},
 		}, nil
 	case PropagatorB3:
 		// Docs: https://github.com/openzipkin/b3-propagation#single-header
 		return http.Header{
-			"b3": {fmt.Sprintf("%s-%s-1", traceID, hex8)},
+			"b3": {fmt.Sprintf("%s-%s-1", traceID, RandHexStringRunes(8))},
 		}, nil
 	case PropagatorJaeger:
 		// Docs: https://www.jaegertracing.io/docs/1.29/client-libraries/#tracespan-identity
 		return http.Header{
-			"uber-trace-id": {fmt.Sprintf("%s:%s:0:1", traceID, hex8)},
+			"uber-trace-id": {fmt.Sprintf("%s:%s:0:1", traceID, RandHexStringRunes(8))},
 		}, nil
 	default:
 		return nil, fmt.Errorf("unknown propagator: %s", propagator)
