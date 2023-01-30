@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
 	"net/http"
 	"time"
@@ -86,11 +87,11 @@ func (c *TracingClient) WithTrace(fn HttpFunc, spanName string, url goja.Value, 
 		return nil, fmt.Errorf("HTTP requests can only be made in the VU context")
 	}
 
-	traceID, _, err := EncodeTraceID(TraceID{
-		Prefix:            K6Prefix,
-		Code:              K6Code_Cloud,
-		UnixTimestampNano: uint64(time.Now().UnixNano()) / uint64(time.Millisecond),
-	})
+	traceID, err := Encode(TraceID{
+		Prefix: K6Prefix,
+		Code:   K6CloudCode,
+		Time:   time.Now(),
+	}, rand.Reader)
 	if err != nil {
 		return nil, err
 	}
