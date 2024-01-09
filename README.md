@@ -1,3 +1,16 @@
+> ### ⚠️ Archived ⚠️
+>
+> This extension has been archived and is no longer maintained by the Grafana team.
+> 
+> At this time, the tracing feature is now available in the as part of the
+> [k6/experimental/tracing](https://grafana.com/docs/k6/latest/javascript-api/k6-experimental/tracing/)
+> module in [k6 OSS](https://grafana.com/docs/k6/latest/).
+> 
+> Furthermore, [Distributed Tracing in Grafana Cloud k6](https://grafana.com/docs/cloud/k6/distributed-tracing/)
+> is now generally available in Grafana Cloud.
+>
+> USE AT YOUR OWN RISK!
+
 # xk6-distributed-tracing
 
 This extension adds distributed tracing support to [k6](https://github.com/grafana/k6)! 
